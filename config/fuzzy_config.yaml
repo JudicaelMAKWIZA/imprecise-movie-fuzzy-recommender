@@ -1,0 +1,65 @@
+# Configuration V1 du systeme de recommandation flou.
+#
+# Ce fichier decrit la structure attendue par les prochains modules, sans
+# definir encore les fonctions d'appartenance ni les regles metier.
+
+project:
+  name: fuzzyrec
+  version: 1
+
+dataset:
+  raw_dir: data/movie
+  processed_dir: data/processed
+  files:
+    movies: movies.csv
+    ratings: ratings.csv
+    tags: tags.csv
+    links: links.csv
+
+fuzzy_system:
+  inference_model: mamdani
+  ruleset: minimal_v1
+  defuzzification_method: centroid
+
+variables:
+  genre_preference:
+    universe: [0.0, 1.0]
+    terms:
+      faible: null
+      moyenne: null
+      forte: null
+    todo: "Ajouter les parametres des fonctions d'appartenance."
+  average_rating:
+    universe: [0.5, 5.0]
+    terms:
+      mauvaise: null
+      correcte: null
+      bonne: null
+      excellente: null
+    todo: "Ajouter les parametres des fonctions d'appartenance."
+  popularity:
+    universe: [0, 350]
+    terms:
+      confidentiel: null
+      modere: null
+      populaire: null
+      tres_populaire: null
+    todo: "Ajouter les parametres des fonctions d'appartenance."
+
+rule_base:
+  minimal_v1:
+    expected_rule_count: 8
+    rules: []
+    todo: "Declarer les 8 regles initiales sans modifier leur interpretabilite."
+  intermediate:
+    expected_rule_count: 20
+    rules: []
+    todo: "Extension prevue apres validation de la V1 minimale."
+
+explanation:
+  activation_threshold: 0.1
+  todo: "Brancher les regles activees et les degres linguistiques dominants."
+
+visualization:
+  output_dir: reports/figures
+  todo: "Prevoir les graphiques de fonctions d'appartenance pour la defense."
