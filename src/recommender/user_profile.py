@@ -29,6 +29,16 @@ GenrePreferenceValue: TypeAlias = float | LinguisticGenrePreference | IntervalGe
 
 
 @dataclass(frozen=True)
+class GenrePreferenceMatch:
+    """Preference agregee pour les genres d'un film."""
+
+    value: GenrePreferenceValue | None
+    known: bool
+    matched_genres: tuple[str, ...] = ()
+    aggregation: str = "mean"
+
+
+@dataclass(frozen=True)
 class GenrePreference:
     """Preference utilisateur associee a un genre MovieLens.
 
@@ -59,6 +69,7 @@ class UserProfile:
     genre_preferences: dict[str, GenrePreference] = field(default_factory=dict)
     recency_preference: float | None = None
     popularity_importance: float | None = None
+    genre_aggregation: str = "mean"
 
     def set_genre_preference(self, preference: GenrePreference) -> None:
         """Ajouter ou remplacer une preference par genre.
@@ -79,31 +90,57 @@ class UserProfile:
             if _preference_strength(preference.value) >= threshold
         ]
 
-    def genre_preference_for_movie(self, movie_genres: list[str]) -> GenrePreferenceValue:
+    def genre_preference_for_movie(self, movie_genres: list[str], aggregation: str | None = None) -> GenrePreferenceMatch:
         """Calculer une preference de genre pour un film.
 
-        La V1 utilise la preference maximale parmi les genres du film. Les
-        termes linguistiques et intervalles sont conserves pour etre fuzzifies
-        comme objets imprecis.
+        La V1 agrege par defaut la force moyenne des genres du film declares
+        dans le profil. `known=False` distingue explicitement un film dont
+        aucun genre n'est present dans le profil d'une vraie preference faible.
         """
 
         if not self.genre_preferences:
-            return 0.5
+            return GenrePreferenceMatch(value=None, known=False, aggregation=aggregation or self.genre_aggregation)
+
+        strategy = aggregation or self.genre_aggregation
+        if strategy not in {"mean", "max"}:
+            raise ValueError("L'agregation de genres supporte uniquement 'mean' ou 'max'.")
 
         preferences_by_genre = {
             genre.casefold().strip(): preference.value
             for genre, preference in self.genre_preferences.items()
             if preference.value is not None
         }
-        matching_values = [
-            preferences_by_genre[genre.casefold().strip()]
+        matching_pairs = [
+            (genre, preferences_by_genre[genre.casefold().strip()])
             for genre in movie_genres
             if genre.casefold().strip() in preferences_by_genre
         ]
-        return max(matching_values, key=_preference_strength, default=0.0)
+        if not matching_pairs:
+            return GenrePreferenceMatch(value=None, known=False, aggregation=strategy)
+
+        matched_genres = tuple(genre for genre, _ in matching_pairs)
+        matching_values = [value for _, value in matching_pairs]
+        if len(matching_values) == 1:
+            return GenrePreferenceMatch(
+                value=matching_values[0],
+                known=True,
+                matched_genres=matched_genres,
+                aggregation=strategy,
+            )
+        if strategy == "max":
+            value = max(matching_values, key=_preference_strength)
+            return GenrePreferenceMatch(value=value, known=True, matched_genres=matched_genres, aggregation=strategy)
+
+        strengths = [_preference_strength(value) for value in matching_values]
+        return GenrePreferenceMatch(
+            value=sum(strengths) / len(strengths),
+            known=True,
+            matched_genres=matched_genres,
+            aggregation=strategy,
+        )
 
 
-def _preference_strength(value: GenrePreferenceValue | None) -> float:
+def preference_strength(value: GenrePreferenceValue | None) -> float:
     if value is None:
         return 0.0
     if isinstance(value, float):
@@ -122,3 +159,7 @@ def _preference_strength(value: GenrePreferenceValue | None) -> float:
         "forte": 1.0,
     }
     return term_strengths.get(normalised, 0.0)
+
+
+def _preference_strength(value: GenrePreferenceValue | None) -> float:
+    return preference_strength(value)

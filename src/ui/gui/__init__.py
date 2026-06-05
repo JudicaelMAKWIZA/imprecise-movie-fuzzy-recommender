@@ -2,12 +2,14 @@
 
 from .explanation_view import ExplanationView
 from .main_window import MainWindow
+from .membership_view import MembershipView
 from .preferences_editor import PreferencesEditor
 from .recommendations_view import RecommendationsView
 
 __all__ = [
     "ExplanationView",
     "MainWindow",
+    "MembershipView",
     "PreferencesEditor",
     "RecommendationsView",
 ]

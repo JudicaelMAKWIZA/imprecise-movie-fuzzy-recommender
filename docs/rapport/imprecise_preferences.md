@@ -8,15 +8,22 @@ utilisateur vers une valeur crisp unique.
 
 ## Formes acceptees
 
-- `Sci-Fi=0.9` : preference crisp classique dans `[0, 1]`.
+- `Sci-Fi=0.9` : preference crisp classique dans `[0, 1]`, acceptee
+  uniquement en mode opt-in `crisp`.
 - `Sci-Fi=forte` : preference linguistique conservee comme terme flou.
 - `Sci-Fi=0.6..0.9` : preference intervalle.
 
 ## Passage vers le FIS
 
-`UserProfile.genre_preference_for_movie` retourne l'objet de preference le plus
-fort parmi les genres du film. `Fuzzifier.fuzzify_imprecise_value` transforme
-ensuite :
+`UserProfile.genre_preference_for_movie` retourne un objet type qui indique si
+au moins un genre du film est connu dans le profil. Lorsque plusieurs genres
+du film sont declares par l'utilisateur, la strategie V1 par defaut calcule la
+moyenne arithmetique des forces de preference correspondantes. L'ancienne
+strategie par maximum reste disponible comme option explicite, mais elle n'est
+plus le defaut car elle masque les preferences faibles ou negatives dans un
+film multi-genres.
+
+`Fuzzifier.fuzzify_imprecise_value` transforme ensuite :
 
 - une valeur crisp en degres par fonctions d'appartenance ;
 - un terme linguistique en intervalle via l'alpha-cut a `0.5`, puis en degres

@@ -16,8 +16,8 @@ from .linguistic_variables import (
     build_popularity_variable,
     build_recommendation_score_variable,
 )
-from .membership import MembershipDefinition
 from .membership_functions import (
+    MembershipDefinition,
     MembershipFunction,
     TrapezoidalMembershipFunction,
     TriangularMembershipFunction,

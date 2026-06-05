@@ -2,41 +2,161 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import tkinter as tk
 from tkinter import ttk
 
-from recommender.pipeline_factory import parse_genre_preferences
-from recommender.user_profile import GenrePreferenceValue
+from fuzzy.fuzzifier import Fuzzifier
+from recommender.user_profile import GenrePreferenceValue, IntervalGenrePreference, LinguisticGenrePreference
+
+
+DEFAULT_LINGUISTIC_PREFERENCES = {"Sci-Fi": "forte", "Action": "moyenne"}
+TERM_TO_VALUE = {"faible": 0.2, "moyenne": 0.5, "forte": 0.85}
+MODE_VALUES = ("linguistique", "crisp", "intervalle")
 
 
 class PreferencesEditor:
-    """Composant Tkinter pour saisir les preferences de genres.
+    """Composant Tkinter pour saisir les preferences de genres par curseurs."""
 
-    La V1 utilise une zone texte compacte au format deja supporte par la CLI :
-    `Sci-Fi=forte,Action=0.7`. Cela suffit pour une demonstration de soutenance
-    sans ajouter de dependance graphique lourde.
-    """
-
-    def __init__(self, parent: tk.Widget, default_text: str = "Sci-Fi=forte,Action=0.7") -> None:
+    def __init__(
+        self,
+        parent: tk.Widget,
+        *,
+        default_preferences: dict[str, str] | None = None,
+        on_change: Callable[[str, float], None] | None = None,
+    ) -> None:
         self.parent = parent
-        self.preference_text = tk.StringVar(value=default_text)
+        self.default_preferences = default_preferences or DEFAULT_LINGUISTIC_PREFERENCES
+        self.on_change = on_change
+        self.fuzzifier = Fuzzifier.default_v1()
         self.frame = ttk.Frame(parent)
+        self.canvas: tk.Canvas | None = None
+        self.scrollable_frame: ttk.Frame | None = None
+        self.value_vars: dict[str, tk.DoubleVar] = {}
+        self.label_vars: dict[str, tk.StringVar] = {}
+        self.mode_vars: dict[str, tk.StringVar] = {}
+        self.touched_genres: set[str] = set(self.default_preferences)
+        self._rendered = False
 
     def render(self) -> ttk.Frame:
         """Afficher les controles de preferences et retourner le conteneur."""
 
+        if self._rendered:
+            return self.frame
+
         ttk.Label(self.frame, text="Preferences genres").grid(row=0, column=0, sticky="w")
-        entry = ttk.Entry(self.frame, textvariable=self.preference_text, width=42)
-        entry.grid(row=1, column=0, sticky="ew", pady=(2, 0))
+        self.canvas = tk.Canvas(self.frame, height=180, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self.frame, orient="vertical", command=self.canvas.yview)
+        self.scrollable_frame = ttk.Frame(self.canvas)
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda _event: self.canvas.configure(scrollregion=self.canvas.bbox("all")) if self.canvas else None,
+        )
+        window_id = self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas.bind(
+            "<Configure>",
+            lambda event: self.canvas.itemconfigure(window_id, width=event.width) if self.canvas else None,
+        )
+        self.canvas.configure(yscrollcommand=scrollbar.set)
+        self.canvas.grid(row=1, column=0, sticky="nsew", pady=(4, 0))
+        scrollbar.grid(row=1, column=1, sticky="ns", pady=(4, 0))
+        self.frame.rowconfigure(1, weight=1)
         self.frame.columnconfigure(0, weight=1)
+        self._rendered = True
+        self.set_genres(sorted(self.default_preferences))
         return self.frame
 
-    def get_preferences_text(self) -> str:
-        """Retourner la saisie brute des preferences."""
+    def set_genres(self, genres: list[str]) -> None:
+        """Reconstruire la liste de curseurs depuis le vocabulaire charge."""
 
-        return self.preference_text.get().strip()
+        if self.scrollable_frame is None:
+            self.render()
+        assert self.scrollable_frame is not None
+        for child in self.scrollable_frame.winfo_children():
+            child.destroy()
+        self.value_vars.clear()
+        self.label_vars.clear()
+        self.mode_vars.clear()
+
+        all_genres = sorted(set(genres).union(self.default_preferences))
+        for row, genre in enumerate(all_genres):
+            default_term = self.default_preferences.get(genre)
+            initial_value = TERM_TO_VALUE.get(default_term or "", 0.0)
+            value_var = tk.DoubleVar(value=initial_value)
+            label_var = tk.StringVar(value=self._dominant_label(initial_value))
+            mode_var = tk.StringVar(value="linguistique")
+            self.value_vars[genre] = value_var
+            self.label_vars[genre] = label_var
+            self.mode_vars[genre] = mode_var
+
+            ttk.Label(self.scrollable_frame, text=genre, width=18).grid(row=row, column=0, sticky="w", padx=(0, 8))
+            scale = ttk.Scale(
+                self.scrollable_frame,
+                from_=0.0,
+                to=1.0,
+                orient="horizontal",
+                variable=value_var,
+                command=lambda raw, selected=genre: self._on_scale_changed(selected, raw),
+            )
+            scale.grid(row=row, column=1, sticky="ew", padx=(0, 8))
+            ttk.Label(self.scrollable_frame, textvariable=label_var, width=12).grid(row=row, column=2, sticky="w")
+            mode = ttk.Combobox(
+                self.scrollable_frame,
+                textvariable=mode_var,
+                values=MODE_VALUES,
+                width=12,
+                state="readonly",
+            )
+            mode.grid(row=row, column=3, sticky="e")
+        self.scrollable_frame.columnconfigure(1, weight=1)
 
     def get_preferences(self) -> dict[str, GenrePreferenceValue]:
-        """Parser la saisie en preferences crisp ou linguistiques."""
+        """Retourner les preferences pretes pour `build_profile`."""
 
-        return parse_genre_preferences(self.get_preferences_text())
+        preferences: dict[str, GenrePreferenceValue] = {}
+        for genre in sorted(self.touched_genres):
+            if genre not in self.value_vars:
+                continue
+            value = float(self.value_vars[genre].get())
+            mode = self.mode_vars[genre].get()
+            if mode == "crisp":
+                preferences[genre] = max(0.0, min(1.0, value))
+            elif mode == "intervalle":
+                preferences[genre] = IntervalGenrePreference(
+                    lower=max(0.0, value - 0.1),
+                    upper=min(1.0, value + 0.1),
+                )
+            else:
+                preferences[genre] = LinguisticGenrePreference(self._dominant_term(value))
+        return preferences
+
+    def set_enabled(self, enabled: bool) -> None:
+        """Activer ou desactiver les controles de saisie."""
+
+        state = "normal" if enabled else "disabled"
+        combo_state = "readonly" if enabled else "disabled"
+        for child in self.frame.winfo_children():
+            self._set_widget_state(child, state=state, combo_state=combo_state)
+
+    def _on_scale_changed(self, genre: str, raw_value: str) -> None:
+        value = float(raw_value)
+        self.touched_genres.add(genre)
+        self.label_vars[genre].set(self._dominant_label(value))
+        if self.on_change is not None:
+            self.on_change("genre_preference", value)
+
+    def _dominant_label(self, value: float) -> str:
+        term = self._dominant_term(value)
+        return {"faible": "faible", "moyenne": "moyenne", "forte": "forte"}[term]
+
+    def _dominant_term(self, value: float) -> str:
+        degrees = self.fuzzifier.fuzzify_value("genre_preference", max(0.0, min(1.0, value)))
+        return max(degrees, key=lambda term: (degrees[term], term))
+
+    def _set_widget_state(self, widget: tk.Widget, *, state: str, combo_state: str) -> None:
+        try:
+            widget.configure(state=combo_state if isinstance(widget, ttk.Combobox) else state)
+        except tk.TclError:
+            pass
+        for child in widget.winfo_children():
+            self._set_widget_state(child, state=state, combo_state=combo_state)

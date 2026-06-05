@@ -31,6 +31,50 @@ def test_infer_command_runs_pipeline() -> None:
     assert "R1" in result.output
 
 
+def test_infer_command_accepts_linguistic_inputs() -> None:
+    """La commande infer accepte les termes linguistiques."""
+
+    result = CliRunner().invoke(
+        main,
+        [
+            "infer",
+            "--genre-pref",
+            "forte",
+            "--rating",
+            "excellente",
+            "--popularity",
+            "300",
+            "--explain",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "output_memberships=" in result.output
+    assert "R1" in result.output
+
+
+def test_infer_command_accepts_interval_inputs() -> None:
+    """La commande infer accepte les intervalles de preference."""
+
+    result = CliRunner().invoke(
+        main,
+        [
+            "infer",
+            "--genre-pref",
+            "0.6..0.9",
+            "--rating",
+            "4.8",
+            "--popularity",
+            "300",
+            "--explain",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "output_memberships=" in result.output
+    assert "R1" in result.output or "R4" in result.output
+
+
 def test_recommend_command_outputs_top_n_and_explanations(tmp_path: Path) -> None:
     """La commande recommend charge les donnees et affiche les explications."""
 
@@ -81,6 +125,18 @@ def test_evaluate_command_uses_requested_user(tmp_path: Path) -> None:
 
     assert result.exit_code == 0
     assert "precision_at_n=" in result.output
+
+
+def test_dataset_stats_accepts_data_dir_option(tmp_path: Path) -> None:
+    """dataset-stats accepte le dossier de donnees comme les autres commandes."""
+
+    _write_cli_movielens_dataset(tmp_path)
+
+    result = CliRunner().invoke(main, ["dataset-stats", "--data-dir", str(tmp_path), "--show-genres"])
+
+    assert result.exit_code == 0
+    assert "movies=3" in result.output
+    assert "Sci-Fi" in result.output
 
 
 def _write_cli_movielens_dataset(directory: Path) -> None:

@@ -80,28 +80,34 @@ class Evaluator:
 
         if not 0.0 < test_ratio < 1.0:
             raise ValueError("test_ratio doit appartenir a ]0, 1[.")
-        ratings = raw_data["ratings"]
-        user_ratings = ratings.loc[ratings["userId"] == user_id].sort_values("timestamp")
-        if len(user_ratings) < 2:
+        train_user_ratings, test_user_ratings = _split_user_ratings(
+            raw_data["ratings"],
+            user_id=user_id,
+            test_ratio=test_ratio,
+        )
+        user_ratings_count = len(train_user_ratings) + len(test_user_ratings)
+        if user_ratings_count < 2:
             return EvaluationReport(notes=["Evaluation impossible: moins de deux notes pour cet utilisateur."])
 
-        test_size = max(1, int(round(len(user_ratings) * test_ratio)))
-        train_user_ratings = user_ratings.iloc[:-test_size]
-        test_user_ratings = user_ratings.iloc[-test_size:]
-        if train_user_ratings.empty:
-            train_user_ratings = user_ratings.iloc[:1]
-            test_user_ratings = user_ratings.iloc[1:]
-
+        ratings = raw_data["ratings"]
         train_ratings = ratings.loc[ratings["userId"] != user_id]
         train_ratings = DataFrame([*train_ratings.to_dict("records"), *train_user_ratings.to_dict("records")])
-        from data_manager.preprocessor import MovieLensPreprocessor
-        from recommender.pipeline_factory import build_profile, build_recommender_from_features
+        from recommender.fuzzy_recommender import PrefilterEmptyError
+        from recommender.pipeline_factory import build_profile
 
         train_raw_data = {**raw_data, "ratings": train_ratings}
         profile = build_profile(user_id=user_id, raw_data=train_raw_data)
-        train_features = MovieLensPreprocessor().build_movie_features(train_raw_data)
-        train_recommender = build_recommender_from_features(train_features)
-        recommendations = train_recommender.recommend(profile, top_n=self.top_n)
+        try:
+            recommendations = recommender.recommend(profile, top_n=self.top_n)
+        except PrefilterEmptyError as exc:
+            report = EvaluationReport(notes=[str(exc)])
+            report.metrics = {
+                "precision_at_n": 0.0,
+                "recall_at_n": 0.0,
+                "coverage": 0.0,
+                "diversity": 0.0,
+            }
+            return report
         recommended_ids = [recommendation.movie.movie_id for recommendation in recommendations]
         relevant_ids = test_user_ratings.loc[
             test_user_ratings["rating"] >= relevance_threshold,
@@ -110,7 +116,7 @@ class Evaluator:
         full_catalog = raw_data["movies"]["movieId"].astype(int).tolist()
         genres_by_movie = {
             movie.movie_id: set(movie.genre_list)
-            for movie in train_recommender.repository.movies
+            for movie in recommender.repository.movies
             if movie.movie_id in recommended_ids
         }
         report = self.evaluate_lists(recommended_ids, relevant_ids, full_catalog, genres_by_movie)
@@ -123,3 +129,16 @@ class Evaluator:
         """Retourner un rapport vide explicite pour l'orchestration future."""
 
         return EvaluationReport(notes=["Evaluation complete non branchee aux donnees utilisateurs en V1."])
+
+
+def _split_user_ratings(ratings: DataFrame, *, user_id: int, test_ratio: float) -> tuple[DataFrame, DataFrame]:
+    user_ratings = ratings.loc[ratings["userId"] == user_id].sort_values("timestamp")
+    if len(user_ratings) < 2:
+        return user_ratings, user_ratings.iloc[0:0]
+    test_size = max(1, int(round(len(user_ratings) * test_ratio)))
+    train_user_ratings = user_ratings.iloc[:-test_size]
+    test_user_ratings = user_ratings.iloc[-test_size:]
+    if train_user_ratings.empty:
+        train_user_ratings = user_ratings.iloc[:1]
+        test_user_ratings = user_ratings.iloc[1:]
+    return train_user_ratings, test_user_ratings

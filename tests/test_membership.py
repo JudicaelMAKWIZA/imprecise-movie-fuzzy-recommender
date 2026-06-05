@@ -2,17 +2,19 @@
 
 import pytest
 
-from fuzzy import membership
-from fuzzy.membership_functions import TrapezoidalMembershipFunction, TriangularMembershipFunction
+from fuzzy.membership_functions import (
+    TrapezoidalMembershipFunction,
+    TriangularMembershipFunction,
+    trapezoidal,
+    triangular,
+)
 
 
 def test_membership_functions_are_declared() -> None:
-    """Les fonctions attendues existent dans le module de compatibilite."""
+    """Les fonctions attendues existent dans le module officiel."""
 
-    assert callable(membership.triangular)
-    assert callable(membership.trapezoidal)
-    assert not hasattr(membership, "gaussian")
-    assert not hasattr(membership, "sigmoid")
+    assert callable(triangular)
+    assert callable(trapezoidal)
 
 
 def test_triangular_membership_values() -> None:
@@ -44,8 +46,8 @@ def test_trapezoidal_membership_values_with_shoulders() -> None:
 def test_function_helpers_delegate_to_classes() -> None:
     """Les helpers historiques retournent les memes valeurs que les classes."""
 
-    assert membership.triangular(0.25, 0.0, 0.5, 1.0) == pytest.approx(0.5)
-    assert membership.trapezoidal(20.0, 0.0, 0.0, 10.0, 30.0) == pytest.approx(0.5)
+    assert triangular(0.25, 0.0, 0.5, 1.0) == pytest.approx(0.5)
+    assert trapezoidal(20.0, 0.0, 0.0, 10.0, 30.0) == pytest.approx(0.5)
 
 
 def test_invalid_membership_parameters_are_rejected() -> None:

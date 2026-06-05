@@ -176,13 +176,14 @@ class ExplanationEngine:
         et dans la GUI de demonstration.
         """
 
-        score = explanation.score if explanation.score is not None else 0.0
-        score_label = self._score_label(score)
+        score = explanation.score
+        score_label = "score indetermine" if score is None else self._score_label(score)
         output_term = _format_term(explanation.dominant_output_term) if explanation.dominant_output_term else "aucun"
+        score_text = "score indetermine" if score is None else f"{score:.4f}"
 
         lines = [
             f"Film : {explanation.movie.title}",
-            f"Score de recommandation : {score:.4f} ({score_label}, sortie dominante: {output_term})",
+            f"Score de recommandation : {score_text} ({score_label}, sortie dominante: {output_term})",
             "Pourquoi ce film est recommande :",
         ]
 
@@ -213,7 +214,10 @@ class ExplanationEngine:
         else:
             lines.append("- Aucune regle ne depasse le seuil d'affichage.")
 
-        lines.append(f"Defuzzification centroide : {score:.4f}")
+        if score is None:
+            lines.append("Defuzzification centroide : score indetermine")
+        else:
+            lines.append(f"Defuzzification centroide : {score:.4f}")
         return "\n".join(lines)
 
     def _build_criteria(

@@ -129,5 +129,23 @@ def evaluate_membership(function: MembershipFunction, values: Sequence[float]) -
     return [function(float(value)) for value in values]
 
 
+@dataclass(frozen=True)
+class MembershipDefinition:
+    """Description declarative d'une fonction d'appartenance."""
+
+    name: str
+    kind: str
+    parameters: Sequence[float]
+
+    def build(self) -> MembershipFunction:
+        """Construire la fonction d'appartenance concrete."""
+
+        if self.kind == "triangular":
+            return TriangularMembershipFunction(*self.parameters)
+        if self.kind == "trapezoidal":
+            return TrapezoidalMembershipFunction(*self.parameters)
+        raise ValueError(f"Type de fonction d'appartenance non supporte: {self.kind}")
+
+
 def _clip01(value: float) -> float:
     return max(0.0, min(1.0, float(value)))

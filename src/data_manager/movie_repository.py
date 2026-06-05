@@ -46,7 +46,7 @@ class MovieRepository:
                     title=str(getattr(row, "title")),
                     genre_list=_normalise_genre_list(getattr(row, "genre_list", [])),
                     average_rating=None if _is_missing(average_rating) else float(average_rating),
-                    number_of_ratings=0 if _is_missing(number_of_ratings) else int(number_of_ratings),
+                    number_of_ratings=None if _is_missing(number_of_ratings) else int(number_of_ratings),
                     release_year=None if _is_missing(release_year) else int(release_year),
                     genre_vector=_normalise_genre_vector(getattr(row, "genre_vector", {})),
                 )

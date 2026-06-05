@@ -13,12 +13,12 @@ def test_centroid_on_simple_triangle_samples() -> None:
     assert defuzzifier.centroid([0.0, 0.5, 1.0], [0.0, 1.0, 0.0]) == pytest.approx(0.5)
 
 
-def test_centroid_returns_empty_output_value_for_zero_area() -> None:
-    """Une surface nulle retourne la valeur de sortie vide."""
+def test_centroid_returns_none_for_zero_area() -> None:
+    """Une surface nulle retourne un score indetermine."""
 
-    defuzzifier = Defuzzifier(empty_output_value=0.0)
+    defuzzifier = Defuzzifier()
 
-    assert defuzzifier.centroid([0.0, 1.0], [0.0, 0.0]) == 0.0
+    assert defuzzifier.centroid([0.0, 1.0], [0.0, 0.0]) is None
 
 
 def test_defuzzify_recommendation_score_terms() -> None:

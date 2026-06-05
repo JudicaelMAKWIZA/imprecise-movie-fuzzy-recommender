@@ -22,14 +22,14 @@ class Defuzzifier:
 
     Attributes:
         method: Methode de defuzzification. La V1 supporte `centroid`.
-        empty_output_value: Valeur retournee lorsqu'aucune regle n'active la
-            sortie floue.
+        empty_output_value: Champ de compatibilite historique. La V1 courante
+            retourne `None` lorsqu'aucune regle n'active la sortie floue.
         resolution: Nombre de points utilises pour discretiser l'univers de
             sortie lors de `defuzzify`.
     """
 
     method: str = "centroid"
-    empty_output_value: float = 0.0
+    empty_output_value: float | None = None
     resolution: int = 1001
     _surface_cache: dict[tuple[object, ...], tuple[np.ndarray, dict[str, np.ndarray]]] = field(
         default_factory=dict,
@@ -37,7 +37,7 @@ class Defuzzifier:
         repr=False,
     )
 
-    def centroid(self, universe: Sequence[float], memberships: Sequence[float]) -> float:
+    def centroid(self, universe: Sequence[float], memberships: Sequence[float]) -> float | None:
         """Calculer le centre de gravite d'une sortie floue.
 
         Args:
@@ -68,7 +68,7 @@ class Defuzzifier:
         self,
         output_memberships: dict[str, float],
         variable: LinguisticVariable | None = None,
-    ) -> float:
+    ) -> float | None:
         """Defuzzifier une sortie Mamdani agregee.
 
         Args:
@@ -87,7 +87,7 @@ class Defuzzifier:
         if self.resolution < 2:
             raise ValueError("La resolution doit etre superieure ou egale a 2.")
         if not output_memberships:
-            return self.empty_output_value
+            return None
 
         output_variable = variable or build_recommendation_score_variable()
         universe, term_surfaces = self._term_surfaces(output_variable)
@@ -102,6 +102,8 @@ class Defuzzifier:
         aggregated_memberships = np.maximum.reduce(clipped_surfaces) if clipped_surfaces else np.zeros_like(universe)
 
         score = self.centroid(universe, aggregated_memberships)
+        if score is None:
+            return None
         return max(output_variable.universe_min, min(output_variable.universe_max, score))
 
     def _term_surfaces(self, variable: LinguisticVariable) -> tuple[np.ndarray, dict[str, np.ndarray]]:

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "logique-floue-recommender"
 version = "0.1.0"
-description = "Squelette d'un systeme de recommandation fonde sur la logique floue de type Mamdani."
+description = "Systeme de recommandation flou de type Mamdani demontrant les preferences imprecises sur MovieLens."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -28,7 +28,6 @@ fuzzyrec = "ui.cli.commands:main"
 where = ["src"]
 include = [
     "fuzzy*",
-    "data*",
     "data_manager*",
     "recommender*",
     "ui*",
@@ -39,3 +38,6 @@ include = [
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+markers = [
+    "gui: tests Tkinter/Matplotlib de l'interface graphique",
+]

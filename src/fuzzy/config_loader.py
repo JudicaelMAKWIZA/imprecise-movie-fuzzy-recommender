@@ -27,6 +27,8 @@ class FuzzySystemConfig:
     output_variables: dict[str, LinguisticVariable]
     rule_base: RuleBase
     defuzzification_method: str = "centroid"
+    preferred_genre_threshold: float = 0.2
+    neutral_average_rating: float = 3.5
 
 
 def load_fuzzy_system_config(config_path: Path | str = Path("config/fuzzy_config.yaml")) -> FuzzySystemConfig:
@@ -48,6 +50,8 @@ def load_fuzzy_system_config(config_path: Path | str = Path("config/fuzzy_config
         output_variables=output_variables,
         rule_base=rule_base,
         defuzzification_method=data["fuzzy_system"].get("defuzzification_method", "centroid"),
+        preferred_genre_threshold=float(data["fuzzy_system"].get("preferred_genre_threshold", 0.2)),
+        neutral_average_rating=float(data["fuzzy_system"].get("neutral_average_rating", 3.5)),
     )
 
 
@@ -82,7 +86,6 @@ def _load_rule_base(raw_rule_base: dict[str, Any], ruleset: str) -> RuleBase:
             f"Le ruleset '{ruleset}' est declare mais ne contient aucune regle ; "
             "utilisez 'minimal_v1' ou completez la definition."
         )
-    descriptions = {rule.identifier: rule.description for rule in RuleBase.load_minimal_v1()}
     rules = []
     for raw_rule in raw_ruleset["rules"]:
         antecedents = [
@@ -95,7 +98,7 @@ def _load_rule_base(raw_rule_base: dict[str, Any], ruleset: str) -> RuleBase:
                 identifier=raw_rule["id"],
                 antecedents=antecedents,
                 consequent=FuzzyConsequent(variable=consequent_variable, term=consequent_term),
-                description=raw_rule.get("description", descriptions.get(raw_rule["id"], "")),
+                description=raw_rule.get("description", ""),
             )
         )
     rule_base = RuleBase(name=ruleset, rules=rules)

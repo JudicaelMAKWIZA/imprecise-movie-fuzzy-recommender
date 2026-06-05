@@ -66,7 +66,7 @@ class MovieLensPreprocessor:
 
         features = movies.merge(rating_stats, on="movieId", how="left")
         features["avg_rating"] = features["avg_rating"].astype("Float64")
-        features["num_ratings"] = features["num_ratings"].fillna(0).astype("int64")
+        features["num_ratings"] = features["num_ratings"].astype("Int64")
         features["genre_list"] = features["genres"].map(self.split_genres)
         features["release_year"] = features["title"].map(self.extract_release_year).astype("Int64")
 

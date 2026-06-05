@@ -73,3 +73,22 @@ def test_explanation_engine_rejects_invalid_threshold() -> None:
 
     with pytest.raises(ValueError):
         ExplanationEngine(activation_threshold=1.5)
+
+
+def test_explanation_engine_renders_indeterminate_score() -> None:
+    """Un score None est rendu comme indetermine, pas comme 0.0000."""
+
+    recommender = FuzzyRecommender(
+        repository=MovieRepository([MovieFeatures(1, "No Rule", ["Drama"], 3.0, 40)]),
+        fuzzifier=Fuzzifier.default_v1(),
+        inference_engine=MamdaniInferenceEngine(RuleBase.load_minimal_v1()),
+    )
+    profile = UserProfile(user_id=1)
+    profile.set_genre_preference(GenrePreference("Drama", 0.1))
+
+    recommendation = recommender.score_movie(profile, recommender.repository.get_by_id(1))
+    explanation = ExplanationEngine().explain_recommendation(profile, recommendation)
+
+    assert explanation.score is None
+    assert "score indetermine" in explanation.text
+    assert "Defuzzification centroide : score indetermine" in explanation.text

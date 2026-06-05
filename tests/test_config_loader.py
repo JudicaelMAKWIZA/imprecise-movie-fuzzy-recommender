@@ -27,8 +27,8 @@ def test_yaml_config_matches_minimal_v1_builders() -> None:
             assert yaml_set.membership_function.parameters == code_variable.fuzzy_sets[term].membership_function.parameters
 
     expected_rules = RuleBase.load_minimal_v1().rules
-    assert [(rule.identifier, rule.consequent.term) for rule in config.rule_base.rules] == [
-        (rule.identifier, rule.consequent.term) for rule in expected_rules
+    assert [(rule.identifier, rule.consequent.term, rule.description) for rule in config.rule_base.rules] == [
+        (rule.identifier, rule.consequent.term, rule.description) for rule in expected_rules
     ]
 
 

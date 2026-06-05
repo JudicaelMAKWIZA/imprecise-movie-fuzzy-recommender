@@ -7,7 +7,7 @@ from data_manager.schemas import MovieFeatures
 from fuzzy.fuzzifier import Fuzzifier
 from fuzzy.inference_engine import MamdaniInferenceEngine
 from fuzzy.rule_base import RuleBase
-from recommender.fuzzy_recommender import FuzzyRecommender
+from recommender.fuzzy_recommender import FuzzyRecommender, PrefilterEmptyError
 from recommender.user_profile import GenrePreference, LinguisticGenrePreference, UserProfile
 
 
@@ -65,9 +65,9 @@ def test_recommend_prefilters_ranks_and_returns_top_n() -> None:
 
     recommendations = recommender.recommend(profile, top_n=2)
 
-    assert [recommendation.movie.movie_id for recommendation in recommendations] == [1, 2]
+    assert [recommendation.movie.movie_id for recommendation in recommendations] == [1, 3]
     assert recommendations[0].score > recommendations[1].score
-    assert all(recommendation.movie.movie_id != 3 for recommendation in recommendations)
+    assert all(recommendation.movie.movie_id != 2 for recommendation in recommendations)
 
 
 def test_recommend_rejects_invalid_top_n() -> None:
@@ -106,11 +106,16 @@ def test_neutral_profile_does_not_prefilter_whole_catalog() -> None:
     """Sans genre au-dessus du seuil, l'Architecture B ne scanne pas tout."""
 
     recommender = _build_recommender([MovieFeatures(1, "Drama", ["Drama"], 4.0, 20)])
-    assert recommender.prefilter_candidates(_profile({"Drama": 0.4})) == []
+    result = recommender.prefilter_candidates(_profile({"Drama": 0.1}))
+
+    assert result.candidates == []
+    assert result.threshold == pytest.approx(0.2)
+    with pytest.raises(PrefilterEmptyError, match="Seuil utilise"):
+        recommender.recommend(_profile({"Drama": 0.1}))
 
 
-def test_score_movie_without_matching_rule_returns_zero_score() -> None:
-    """Si aucune regle ne s'active, la defuzzification retourne 0.0."""
+def test_score_movie_without_matching_rule_returns_none_score() -> None:
+    """Si aucune regle ne s'active, le score reste indetermine."""
 
     recommender = _build_recommender(
         [MovieFeatures(1, "No Rule Case", ["Drama"], 3.0, 40)]
@@ -119,8 +124,40 @@ def test_score_movie_without_matching_rule_returns_zero_score() -> None:
 
     recommendation = recommender.score_movie(profile, recommender.repository.get_by_id(1))
 
-    assert recommendation.score == 0.0
+    assert recommendation.score is None
     assert recommendation.inference.activated_rules == []
+
+
+def test_multi_genre_preference_uses_mean_compromise() -> None:
+    """Action forte et Drama faible produisent un compromis moyen."""
+
+    recommender = _build_recommender([MovieFeatures(1, "Action Drama", ["Action", "Drama"], 4.8, 300)])
+    profile = UserProfile(user_id=1)
+    profile.set_genre_preference(GenrePreference("Action", LinguisticGenrePreference("forte")))
+    profile.set_genre_preference(GenrePreference("Drama", LinguisticGenrePreference("faible")))
+
+    recommendation = recommender.score_movie(profile, recommender.repository.get_by_id(1))
+
+    assert recommendation.crisp_inputs["genre_preference"] == pytest.approx(0.625)
+    activations = {activation.rule.identifier: activation.degree for activation in recommendation.inference.activated_rules}
+    assert {"R1", "R4"}.issubset(activations)
+    assert activations["R4"] > activations["R1"]
+
+
+def test_movie_without_popularity_is_not_in_top_n() -> None:
+    """Un film sans popularite connue n'est pas recommande comme confidentiel."""
+
+    recommender = _build_recommender(
+        [
+            MovieFeatures(1, "Unrated Sci-Fi", ["Sci-Fi"], 4.8, None),
+            MovieFeatures(2, "Rated Sci-Fi", ["Sci-Fi"], 4.8, 300),
+        ]
+    )
+
+    recommendations = recommender.recommend(_profile({"Sci-Fi": 0.9}), top_n=2)
+
+    assert [recommendation.movie.movie_id for recommendation in recommendations] == [2]
+    assert recommender.score_movie(_profile({"Sci-Fi": 0.9}), recommender.repository.get_by_id(1)).score is None
 
 
 def _build_recommender(movies: list[MovieFeatures]) -> FuzzyRecommender:

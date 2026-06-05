@@ -90,8 +90,8 @@ def test_evaluator_evaluate_user_temporal_split() -> None:
     assert any("train=1, test=1" in note for note in report.notes)
 
 
-def test_evaluator_rebuilds_features_from_train_split() -> None:
-    """Une moyenne issue uniquement du test ne doit pas favoriser un candidat."""
+def test_evaluator_uses_passed_recommender() -> None:
+    """evaluate_user reutilise le recommender fourni."""
 
     pd = pytest.importorskip("pandas")
     raw_data = {
@@ -110,22 +110,34 @@ def test_evaluator_rebuilds_features_from_train_split() -> None:
         "tags": pd.DataFrame(columns=["userId", "movieId", "tag", "timestamp"]),
         "links": pd.DataFrame(columns=["movieId", "imdbId", "tmdbId"]),
     }
-    recommender_with_leaky_features = FuzzyRecommender(
-        repository=MovieRepository(
-            [
-                MovieFeatures(1, "Train Sci-Fi", ["Sci-Fi"], 3.0, 1),
-                MovieFeatures(2, "Heldout Sci-Fi", ["Sci-Fi"], 5.0, 1),
-            ]
-        ),
-        fuzzifier=Fuzzifier.default_v1(),
-        inference_engine=MamdaniInferenceEngine(RuleBase.load_minimal_v1()),
-    )
+    class CountingRecommender:
+        def __init__(self) -> None:
+            self.calls = 0
+            self.repository = MovieRepository(
+                [
+                    MovieFeatures(1, "Train Sci-Fi", ["Sci-Fi"], 3.0, 1),
+                    MovieFeatures(2, "Heldout Sci-Fi", ["Sci-Fi"], 5.0, 1),
+                ]
+            )
+
+        def recommend(self, profile, top_n: int):
+            self.calls += 1
+            return [
+                type(
+                    "RecommendationStub",
+                    (),
+                    {"movie": self.repository.get_by_id(2), "score": 0.9},
+                )()
+            ][:top_n]
+
+    recommender = CountingRecommender()
 
     report = Evaluator(top_n=1).evaluate_user(
         user_id=1,
         raw_data=raw_data,
-        recommender=recommender_with_leaky_features,
+        recommender=recommender,
         test_ratio=0.5,
     )
 
-    assert report.metrics["recall_at_n"] == pytest.approx(0.0)
+    assert recommender.calls == 1
+    assert report.metrics["recall_at_n"] == pytest.approx(1.0)

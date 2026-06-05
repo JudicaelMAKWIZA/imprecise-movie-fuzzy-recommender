@@ -20,6 +20,8 @@ fuzzy_system:
   inference_model: mamdani
   ruleset: minimal_v1
   defuzzification_method: centroid
+  preferred_genre_threshold: 0.2
+  neutral_average_rating: 3.5
 
 variables:
   genre_preference:
@@ -92,6 +94,7 @@ rule_base:
     output: recommendation_score
     rules:
       - id: R1
+        description: "Preference de genre forte, note excellente et popularite tres elevee : recommandation maximale."
         if:
           genre_preference: forte
           average_rating: excellente
@@ -99,6 +102,7 @@ rule_base:
         then:
           recommendation_score: tres_fort
       - id: R2
+        description: "Un film excellent dans un genre tres apprecie reste fortement recommande meme s'il est confidentiel."
         if:
           genre_preference: forte
           average_rating: excellente
@@ -106,6 +110,7 @@ rule_base:
         then:
           recommendation_score: fort
       - id: R3
+        description: "Genre tres apprecie, bonne note et popularite solide : recommandation forte."
         if:
           genre_preference: forte
           average_rating: bonne
@@ -113,6 +118,7 @@ rule_base:
         then:
           recommendation_score: fort
       - id: R4
+        description: "Interet de genre moyen compense par une excellente note et une tres forte popularite."
         if:
           genre_preference: moyenne
           average_rating: excellente
@@ -120,6 +126,7 @@ rule_base:
         then:
           recommendation_score: fort
       - id: R5
+        description: "Situation equilibree : preference, note et popularite restent intermediaires."
         if:
           genre_preference: moyenne
           average_rating: bonne
@@ -127,6 +134,7 @@ rule_base:
         then:
           recommendation_score: moyen
       - id: R6
+        description: "Genre peu apprecie mais film excellent et tres populaire : recommandation prudente."
         if:
           genre_preference: faible
           average_rating: excellente
@@ -134,6 +142,7 @@ rule_base:
         then:
           recommendation_score: moyen
       - id: R7
+        description: "La preference de genre ne suffit pas a compenser une mauvaise note, meme avec popularite."
         if:
           genre_preference: forte
           average_rating: mauvaise
@@ -141,6 +150,7 @@ rule_base:
         then:
           recommendation_score: faible
       - id: R8
+        description: "Genre peu apprecie, mauvaise note et faible visibilite : recommandation tres faible."
         if:
           genre_preference: faible
           average_rating: mauvaise

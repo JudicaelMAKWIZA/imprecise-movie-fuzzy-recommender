@@ -10,13 +10,25 @@ from recommender.user_profile import LinguisticGenrePreference
 def test_parse_genre_preferences() -> None:
     """Les preferences CLI/GUI sont parsees dans un format commun."""
 
-    assert parse_genre_preferences("Sci-Fi=0.9, Action=0.7") == {"Sci-Fi": 0.9, "Action": 0.7}
+    assert parse_genre_preferences("Sci-Fi=0.9, Action=0.7", mode="crisp") == {"Sci-Fi": 0.9, "Action": 0.7}
     parsed = parse_genre_preferences("Sci-Fi=forte")
     assert isinstance(parsed["Sci-Fi"], LinguisticGenrePreference)
     assert parsed["Sci-Fi"].term == "forte"
 
     with pytest.raises(ValueError):
-        parse_genre_preferences("Sci-Fi=1.5")
+        parse_genre_preferences("Sci-Fi=0.9")
+
+    with pytest.raises(ValueError, match="Terme inconnu"):
+        parse_genre_preferences("Sci-Fi=tres_forte")
+
+    with pytest.raises(ValueError, match="lower doit etre <= upper"):
+        parse_genre_preferences("Sci-Fi=0.9..0.4")
+
+    with pytest.raises(ValueError, match="crisp refusee"):
+        parse_genre_preferences("Sci-Fi=0.9")
+
+    with pytest.raises(ValueError):
+        parse_genre_preferences("Sci-Fi=1.5", mode="crisp")
 
 
 def test_build_profile_derives_genre_preferences_from_user_history() -> None:

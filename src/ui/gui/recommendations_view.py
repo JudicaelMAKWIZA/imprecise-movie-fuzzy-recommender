@@ -51,12 +51,12 @@ class RecommendationsView:
         for item in self.tree.get_children():
             self.tree.delete(item)
         for rank, recommendation in enumerate(recommendations, start=1):
-            score = recommendation.score if recommendation.score is not None else 0.0
+            score = "indetermine" if recommendation.score is None else f"{recommendation.score:.4f}"
             self.tree.insert(
                 "",
                 "end",
                 iid=str(rank - 1),
-                values=(rank, recommendation.movie.movie_id, f"{score:.4f}", recommendation.movie.title),
+                values=(rank, recommendation.movie.movie_id, score, recommendation.movie.title),
             )
 
     def selected_recommendation(self) -> Recommendation | None:
