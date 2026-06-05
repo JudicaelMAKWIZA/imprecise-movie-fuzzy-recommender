@@ -8,19 +8,25 @@ Les specifications de reference sont :
 - `docs/Plan_v1___traycer.md`
 - `docs/ARCHITECTURAL_DECISIONS.md`
 
-## Objectif actuel
+## Etat actuel
 
-Cette version met en place uniquement l'architecture logicielle. Elle ne
-contient pas encore la logique metier :
+Cette version implemente les fondations du projet :
 
-- pas de fonctions d'appartenance implementees ;
-- pas de base de regles floues implementees ;
-- pas de moteur d'inference Mamdani implemente ;
-- pas de logique de recommandation ;
-- pas de GUI fonctionnelle.
+- chargement valide des fichiers MovieLens ;
+- pretraitement des caracteristiques de films ;
+- ensembles flous ;
+- fonctions d'appartenance triangulaire et trapezoidale from scratch ;
+- variables linguistiques V1 ;
+- fuzzification ;
+- visualisation matplotlib des fonctions d'appartenance.
 
-Chaque module expose des classes, fonctions et docstrings servant de contrat
-pour les prochaines phases de developpement.
+Restent volontairement hors de cette phase :
+
+- base de regles floues ;
+- moteur d'inference Mamdani ;
+- defuzzification ;
+- logique de recommandation ;
+- GUI fonctionnelle.
 
 ## Architecture
 
@@ -35,6 +41,7 @@ Logique_Floue/
 │   └── rapport/
 ├── src/
 │   ├── fuzzy/
+│   ├── data_manager/
 │   ├── data/
 │   ├── recommender/
 │   ├── ui/
@@ -68,12 +75,26 @@ python main.py --help
 python main.py recommend --user-id 42 --top-n 10 --explain
 ```
 
+## Modules principaux
+
+- `src/data_manager/loader.py` : chargement, validation, erreurs et logging.
+- `src/data_manager/preprocessor.py` : derivation `avg_rating`, `num_ratings`,
+  `genre_list`, `genre_vector` et `release_year`.
+- `src/fuzzy/fuzzy_set.py` : ensemble flou.
+- `src/fuzzy/membership_functions.py` : fonctions triangulaire et trapezoidale.
+- `src/fuzzy/linguistic_variables.py` : variables V1.
+- `src/fuzzy/fuzzifier.py` : transformation crisp vers degres d'appartenance.
+- `src/visualization/membership_plots.py` : graphiques matplotlib.
+
+## Tests
+
+```bash
+python -m pytest -q -p no:cacheprovider
+```
+
 ## Prochaines etapes
 
-1. Implementer le chargement MovieLens.
-2. Implementer le pretraitement dans `src/data/preprocessor.py`.
-3. Implementer les fonctions d'appartenance dans `src/fuzzy/membership.py`.
-4. Definir les variables linguistiques V1.
-5. Ajouter les 8 regles initiales.
-6. Implementer le moteur Mamdani et la defuzzification.
-7. Brancher la recommandation, les explications, puis la CLI.
+1. Ajouter les 8 regles initiales.
+2. Implementer le moteur Mamdani.
+3. Implementer l'agregation et la defuzzification.
+4. Brancher la recommandation, les explications, puis la CLI.

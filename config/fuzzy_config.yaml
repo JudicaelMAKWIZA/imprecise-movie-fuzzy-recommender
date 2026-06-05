@@ -1,7 +1,7 @@
 # Configuration V1 du systeme de recommandation flou.
 #
-# Ce fichier decrit la structure attendue par les prochains modules, sans
-# definir encore les fonctions d'appartenance ni les regles metier.
+# Ce fichier documente les parametres V1 utilises par les variables
+# linguistiques implementees dans `src/fuzzy/linguistic_variables.py`.
 
 project:
   name: fuzzyrec
@@ -25,26 +25,45 @@ variables:
   genre_preference:
     universe: [0.0, 1.0]
     terms:
-      faible: null
-      moyenne: null
-      forte: null
-    todo: "Ajouter les parametres des fonctions d'appartenance."
+      faible:
+        type: trapezoidal
+        parameters: [0.0, 0.0, 0.2, 0.45]
+      moyenne:
+        type: triangular
+        parameters: [0.3, 0.5, 0.7]
+      forte:
+        type: trapezoidal
+        parameters: [0.55, 0.8, 1.0, 1.0]
   average_rating:
     universe: [0.5, 5.0]
     terms:
-      mauvaise: null
-      correcte: null
-      bonne: null
-      excellente: null
-    todo: "Ajouter les parametres des fonctions d'appartenance."
+      mauvaise:
+        type: trapezoidal
+        parameters: [0.5, 0.5, 1.5, 2.5]
+      correcte:
+        type: triangular
+        parameters: [2.0, 3.0, 3.8]
+      bonne:
+        type: triangular
+        parameters: [3.2, 3.8, 4.5]
+      excellente:
+        type: trapezoidal
+        parameters: [4.0, 4.5, 5.0, 5.0]
   popularity:
     universe: [0, 350]
     terms:
-      confidentiel: null
-      modere: null
-      populaire: null
-      tres_populaire: null
-    todo: "Ajouter les parametres des fonctions d'appartenance."
+      confidentiel:
+        type: trapezoidal
+        parameters: [0, 0, 10, 30]
+      modere:
+        type: triangular
+        parameters: [20, 60, 120]
+      populaire:
+        type: triangular
+        parameters: [80, 150, 250]
+      tres_populaire:
+        type: trapezoidal
+        parameters: [200, 280, 350, 350]
 
 rule_base:
   minimal_v1:
@@ -62,4 +81,4 @@ explanation:
 
 visualization:
   output_dir: reports/figures
-  todo: "Prevoir les graphiques de fonctions d'appartenance pour la defense."
+  status: "Outils matplotlib disponibles dans src/visualization/membership_plots.py."

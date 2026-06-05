@@ -1,31 +1,47 @@
-"""Coeur scientifique flou du projet.
-
-Le paquet `fuzzy` regroupe les briques du systeme d'inference Mamdani :
-fonctions d'appartenance, variables linguistiques, fuzzification, base de
-regles, agregation, defuzzification et moteur d'inference.
-
-Les modules sont volontairement sous forme de squelette. Les fonctions qui
-portent de la logique floue doivent rester non implementees jusqu'a la phase de
-developpement correspondante.
-"""
+"""Coeur scientifique flou du projet."""
 
 from .aggregation import ConsequentAggregator
 from .defuzzification import Defuzzifier
-from .fuzzification import Fuzzifier
+from .fuzzifier import Fuzzifier
+from .fuzzy_set import FuzzySet
 from .inference_engine import InferenceResult, MamdaniInferenceEngine
-from .linguistic_vars import LinguisticTerm, LinguisticVariable
+from .linguistic_variables import (
+    LinguisticTerm,
+    LinguisticVariable,
+    build_average_rating_variable,
+    build_default_v1_variables,
+    build_genre_preference_variable,
+    build_popularity_variable,
+)
 from .membership import MembershipDefinition
+from .membership_functions import (
+    MembershipFunction,
+    TrapezoidalMembershipFunction,
+    TriangularMembershipFunction,
+    trapezoidal,
+    triangular,
+)
 from .rule_base import FuzzyRule, RuleBase
 
 __all__ = [
     "ConsequentAggregator",
     "Defuzzifier",
     "Fuzzifier",
+    "FuzzySet",
     "FuzzyRule",
     "InferenceResult",
     "LinguisticTerm",
     "LinguisticVariable",
     "MamdaniInferenceEngine",
     "MembershipDefinition",
+    "MembershipFunction",
     "RuleBase",
+    "TrapezoidalMembershipFunction",
+    "TriangularMembershipFunction",
+    "build_average_rating_variable",
+    "build_default_v1_variables",
+    "build_genre_preference_variable",
+    "build_popularity_variable",
+    "trapezoidal",
+    "triangular",
 ]

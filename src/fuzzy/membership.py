@@ -1,18 +1,22 @@
-"""Definitions des fonctions d'appartenance floues.
+"""Compatibilite pour les fonctions d'appartenance.
 
-Ce module doit devenir la bibliotheque manuelle des fonctions d'appartenance du
-projet : triangulaire, trapezoidale, gaussienne et sigmoide. Les specifications
-imposent que le moteur flou principal soit developpe par l'equipe ; les
-bibliotheques externes comme scikit-fuzzy ne pourront servir qu'a la validation.
-
-La version actuelle ne contient que les contrats et les types de base. Aucune
-formule mathematique n'est implementee ici.
+Le module officiel est `fuzzy.membership_functions`. Ce fichier conserve les
+anciens noms `triangular` et `trapezoidal` utilises par les premiers tests et
+par quelques modules du squelette.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Sequence
+
+from .membership_functions import (
+    MembershipFunction,
+    TrapezoidalMembershipFunction,
+    TriangularMembershipFunction,
+    trapezoidal,
+    triangular,
+)
 
 
 @dataclass(frozen=True)
@@ -35,50 +39,14 @@ class MembershipDefinition:
     kind: str
     parameters: Sequence[float]
 
+    def build(self) -> MembershipFunction:
+        """Construire la fonction d'appartenance concrete."""
 
-def triangular(x: float, a: float, b: float, c: float) -> float:
-    """Evaluer une fonction d'appartenance triangulaire.
-
-    Cette fonction representera un terme linguistique avec un pic unique. Elle
-    devra retourner un degre d'appartenance dans `[0, 1]`.
-
-    Args:
-        x: Valeur a evaluer sur l'univers de discours.
-        a: Borne gauche ou le degre doit devenir nul.
-        b: Sommet du triangle ou le degre doit valoir un.
-        c: Borne droite ou le degre doit redevenir nul.
-
-    Returns:
-        Le degre d'appartenance de `x`.
-
-    TODO:
-        Implementer la formule triangulaire et les controles de bornes.
-    """
-
-    raise NotImplementedError("TODO: implementer la fonction triangulaire.")
-
-
-def trapezoidal(x: float, a: float, b: float, c: float, d: float) -> float:
-    """Evaluer une fonction d'appartenance trapezoidale.
-
-    Cette fonction servira principalement aux termes situes aux extremites d'un
-    univers de discours, comme `faible` ou `tres_populaire`.
-
-    Args:
-        x: Valeur a evaluer.
-        a: Debut de la rampe montante.
-        b: Debut du plateau.
-        c: Fin du plateau.
-        d: Fin de la rampe descendante.
-
-    Returns:
-        Le degre d'appartenance de `x`.
-
-    TODO:
-        Implementer la formule trapezoidale sans utiliser scikit-fuzzy.
-    """
-
-    raise NotImplementedError("TODO: implementer la fonction trapezoidale.")
+        if self.kind == "triangular":
+            return TriangularMembershipFunction(*self.parameters)
+        if self.kind == "trapezoidal":
+            return TrapezoidalMembershipFunction(*self.parameters)
+        raise ValueError(f"Type de fonction d'appartenance non supporte: {self.kind}")
 
 
 def gaussian(x: float, mean: float, sigma: float) -> float:
@@ -92,7 +60,7 @@ def gaussian(x: float, mean: float, sigma: float) -> float:
         besoin ou si la validation scientifique l'exige.
     """
 
-    raise NotImplementedError("TODO: implementer la fonction gaussienne.")
+    raise NotImplementedError("La fonction gaussienne est hors perimetre V1.")
 
 
 def sigmoid(x: float, center: float, slope: float) -> float:
@@ -105,4 +73,4 @@ def sigmoid(x: float, center: float, slope: float) -> float:
         Implementer apres stabilisation de la V1 minimale.
     """
 
-    raise NotImplementedError("TODO: implementer la fonction sigmoide.")
+    raise NotImplementedError("La fonction sigmoide est hors perimetre V1.")

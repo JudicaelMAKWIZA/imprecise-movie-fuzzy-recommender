@@ -16,7 +16,6 @@ dependencies = [
     "click>=8.1",
     "PyYAML>=6.0",
     "loguru>=0.7",
-    "scikit-fuzzy>=0.5",
 ]
 
 [project.optional-dependencies]
@@ -30,6 +29,7 @@ where = ["src"]
 include = [
     "fuzzy*",
     "data*",
+    "data_manager*",
     "recommender*",
     "ui*",
     "evaluation*",

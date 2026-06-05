@@ -34,7 +34,7 @@ class Defuzzifier:
             Score crisp defuzzifie.
 
         TODO:
-            Implementer la formule du centroide sans utiliser scikit-fuzzy.
+            Implementer la formule du centroide sans bibliotheque floue externe.
         """
 
         raise NotImplementedError("TODO: implementer la defuzzification centroide.")

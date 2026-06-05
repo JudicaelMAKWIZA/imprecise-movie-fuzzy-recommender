@@ -6,4 +6,3 @@ click>=8.1
 PyYAML>=6.0
 loguru>=0.7
 pytest>=8.0
-scikit-fuzzy>=0.5

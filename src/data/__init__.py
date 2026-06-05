@@ -1,16 +1,18 @@
 """Acces et preparation des donnees MovieLens.
 
-Les donnees brutes situees dans `data/movie/` ne doivent jamais etre modifiees.
-Les donnees derivees devront etre ecrites dans `data/processed/`.
+`data_manager` est le paquet officiel pour le chargement et le pretraitement.
+Ce paquet garde les exports historiques du squelette.
 """
 
-from .loader import MovieLensLoader
+from .loader import DataLoadingError, DataValidationError, MovieLensLoader
 from .movie_repository import MovieRepository
 from .preprocessor import MovieLensPreprocessor
 from .schemas import LinkRecord, MovieFeatures, MovieRecord, RatingRecord, TagRecord
 
 __all__ = [
     "LinkRecord",
+    "DataLoadingError",
+    "DataValidationError",
     "MovieFeatures",
     "MovieLensLoader",
     "MovieLensPreprocessor",
