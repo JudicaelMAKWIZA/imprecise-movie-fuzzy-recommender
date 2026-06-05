@@ -1,50 +1,93 @@
-# Systeme de recommandation flou
+# Système de recommandation flou basé sur Mamdani
 
-Ce depot contient le squelette officiel du projet de logique floue pour un
-systeme de recommandation de films base sur MovieLens `ml-latest-small`.
+Projet académique de logique floue appliqué à la recommandation de films à partir du jeu de données MovieLens (`ml-latest-small`).
 
-Les specifications de reference sont :
+Le système implémente un moteur flou de type Mamdani développé principalement from scratch afin de démontrer les différentes étapes d'un système de recommandation fondé sur des préférences imprécises.
 
-- `docs/Plan_v1___traycer.md`
-- `docs/ARCHITECTURAL_DECISIONS.md`
+---
 
-## Etat actuel
+## Fonctionnalités implémentées
 
-Cette version implemente les fondations du projet :
+### Gestion des données
 
-- chargement valide des fichiers MovieLens ;
-- pretraitement des caracteristiques de films ;
-- ensembles flous ;
-- fonctions d'appartenance triangulaire et trapezoidale from scratch ;
-- variables linguistiques V1 ;
-- fuzzification ;
-- visualisation matplotlib des fonctions d'appartenance.
+* Chargement des données MovieLens
+* Validation des fichiers d'entrée
+* Prétraitement des métadonnées
+* Construction du catalogue de films
 
-Restent volontairement hors de cette phase :
+### Moteur flou
 
-- moteur d'explications textuelles ;
-- GUI fonctionnelle.
+* Ensembles flous
+* Fonctions d'appartenance triangulaires
+* Fonctions d'appartenance trapézoïdales
+* Variables linguistiques
+* Fuzzification
+* Base de règles interprétables
+* Inférence Mamdani
+* Agrégation par maximum
+* Défuzzification par centroïde
+
+### Recommandation
+
+* Construction de profils utilisateurs
+* Pré-filtrage de candidats
+* Évaluation floue des films
+* Calcul du score de recommandation
+* Classement Top-N
+
+### Explicabilité
+
+Chaque recommandation peut être justifiée par :
+
+* les règles activées ;
+* leur degré d'activation ;
+* les termes linguistiques impliqués ;
+* le score final obtenu.
+
+### Interfaces
+
+#### CLI
+
+Interface complète accessible depuis le terminal.
+
+#### GUI
+
+Interface graphique Tkinter permettant :
+
+* le chargement du catalogue ;
+* la sélection d'un utilisateur ;
+* la saisie de préférences ;
+* la génération de recommandations ;
+* la consultation des explications.
+
+### Évaluation
+
+* Métriques de recommandation
+* Tests unitaires
+* Tests d'intégration
+* Validation du pipeline complet
+
+---
 
 ## Architecture
 
 ```text
 Logique_Floue/
 ├── config/
-│   └── fuzzy_config.yaml
 ├── data/
 │   ├── movie/
 │   └── processed/
 ├── docs/
 │   └── rapport/
 ├── src/
-│   ├── fuzzy/
-│   ├── data_manager/
 │   ├── data/
+│   ├── data_manager/
+│   ├── evaluation/
+│   ├── fuzzy/
 │   ├── recommender/
 │   ├── ui/
 │   │   ├── cli/
 │   │   └── gui/
-│   ├── evaluation/
 │   └── visualization/
 ├── tests/
 ├── main.py
@@ -52,57 +95,193 @@ Logique_Floue/
 └── requirements.txt
 ```
 
+---
+
 ## Installation
+
+Créer un environnement virtuel :
 
 ```bash
 python -m venv .venv
+```
+
+Activation Windows :
+
+```bash
 .venv\Scripts\activate
+```
+
+Installation des dépendances :
+
+```bash
 pip install -r requirements.txt
 pip install -e .
 ```
 
-## Utilisation prevue
+---
 
-La CLI est le premier point d'entree a rendre fonctionnel. Les commandes sont
-deja declarees, mais elles renvoient volontairement une erreur tant que la
-logique correspondante n'est pas implementee.
+## Exécution
+
+### Interface CLI
+
+Afficher l'aide :
 
 ```bash
 python main.py --help
-python main.py recommend --user-id 42 --top-n 10 --explain
 ```
 
-## Modules principaux
+Générer des recommandations :
 
-- `src/data_manager/loader.py` : chargement, validation, erreurs et logging.
-- `src/data_manager/preprocessor.py` : derivation `avg_rating`, `num_ratings`,
-  `genre_list`, `genre_vector` et `release_year`.
-- `src/fuzzy/fuzzy_set.py` : ensemble flou.
-- `src/fuzzy/membership_functions.py` : fonctions triangulaire et trapezoidale.
-- `src/fuzzy/linguistic_variables.py` : variables V1.
-- `src/fuzzy/fuzzifier.py` : transformation crisp vers degres d'appartenance.
-- `src/fuzzy/rule_base.py` : base de 8 regles V1 interpretables.
-- `src/fuzzy/inference_engine.py` : activation Mamdani, implication, aggregation
-  et traces d'inference.
-- `src/fuzzy/defuzzification.py` : defuzzification centroide.
-- `src/recommender/fuzzy_recommender.py` : pre-filtrage, scoring, classement et
-  Top-N.
-- `src/visualization/membership_plots.py` : graphiques matplotlib.
+```bash
+python main.py recommend --user-id 1 --top-n 10 --explain
+```
+
+### Interface graphique
+
+Lancer la GUI :
+
+```bash
+python main.py gui
+```
+
+---
+
+## Variables linguistiques Version 1
+
+### Entrées
+
+#### Préférence de genre
+
+Univers :
+
+```text
+[0 ; 1]
+```
+
+Termes :
+
+* faible
+* moyenne
+* forte
+
+#### Note moyenne
+
+Univers :
+
+```text
+[0.5 ; 5]
+```
+
+Termes :
+
+* mauvaise
+* correcte
+* bonne
+* excellente
+
+#### Popularité
+
+Univers :
+
+```text
+[0 ; 350]
+```
+
+Termes :
+
+* confidentiel
+* modéré
+* populaire
+* très populaire
+
+### Sortie
+
+#### Score de recommandation
+
+Univers :
+
+```text
+[0 ; 1]
+```
+
+Termes :
+
+* très faible
+* faible
+* moyen
+* fort
+* très fort
+
+---
+
+## Pipeline de recommandation
+
+```text
+Profil utilisateur
+        ↓
+Pré-filtrage
+        ↓
+Fuzzification
+        ↓
+Inférence Mamdani
+        ↓
+Agrégation
+        ↓
+Défuzzification
+        ↓
+Score final
+        ↓
+Classement
+        ↓
+Top-N
+        ↓
+Explications
+```
+
+---
 
 ## Tests
 
-```bash
-python -m pytest -q -p no:cacheprovider
-```
-
-## Exemple CLI
+Exécuter la suite complète :
 
 ```bash
-python main.py infer --genre-pref 0.9 --rating 4.8 --popularity 300 --explain
+python -m pytest
 ```
 
-## Prochaines etapes
+Résultat actuel :
 
-1. Implementer le moteur d'explications textuelles.
-2. Brancher la recommandation Top-N complete dans la CLI.
-3. Ajouter l'evaluation sur utilisateurs MovieLens train/test.
+```text
+71 tests réussis
+0 échec
+```
+
+---
+
+## Documentation
+
+La documentation détaillée est disponible dans :
+
+```text
+docs/rapport/
+```
+
+Elle contient notamment :
+
+* architecture du système ;
+* moteur Mamdani ;
+* pipeline de recommandation ;
+* évaluations ;
+* exemples CLI ;
+* revue de littérature ;
+* journal de développement.
+
+---
+
+## Objectif pédagogique
+
+Ce projet a pour objectif principal de démontrer la conception complète d'un système de recommandation fondé sur la logique floue :
+
+* modélisation des préférences imprécises ;
+* interprétabilité des décisions ;
+* inférence Mamdani ;
+* recommandation de films à partir de données réelles MovieLens.
