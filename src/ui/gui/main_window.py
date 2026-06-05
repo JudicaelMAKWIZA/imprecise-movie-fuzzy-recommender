@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import filedialog, messagebox, ttk
 
 from data_manager.preprocessor import MovieLensPreprocessor
 from recommender.explanation_engine import ExplanationEngine
@@ -33,6 +33,7 @@ class MainWindow:
         self.root: tk.Tk | None = None
         self.user_id_var: tk.StringVar | None = None
         self.top_n_var: tk.StringVar | None = None
+        self.dataset_path_var: tk.StringVar | None = None
         self.status_var: tk.StringVar | None = None
         self.preferences_editor: PreferencesEditor | None = None
         self.membership_view: MembershipView | None = None
@@ -40,13 +41,16 @@ class MainWindow:
         self.explanation_view: ExplanationView | None = None
         self.controls_to_lock: list[tk.Widget] = []
         self.load_button: ttk.Button | None = None
+        self.dataset_button: ttk.Button | None = None
 
     def show(self) -> None:
         """Afficher la fenetre principale et lancer la boucle Tkinter."""
 
         self.root = tk.Tk()
         self.root.title("FuzzyRec - Mamdani V1")
-        self.root.geometry("920x720")
+        self.root.geometry("1040x760")
+        self.root.minsize(760, 560)
+        self._configure_style()
         self._build_widgets(self.root)
         self.root.after(0, self.load_catalog)
         self.root.mainloop()
@@ -54,59 +58,91 @@ class MainWindow:
     def _build_widgets(self, root: tk.Tk) -> None:
         self.user_id_var = tk.StringVar(value="1")
         self.top_n_var = tk.StringVar(value="10")
+        self.dataset_path_var = tk.StringVar(value=str(self.raw_dir))
         self.status_var = tk.StringVar(value="Catalogue non charge")
 
-        container = ttk.Frame(root, padding=12)
+        self._configure_style()
+        container = ttk.Frame(root, padding=10, style="App.TFrame")
         container.grid(row=0, column=0, sticky="nsew")
         root.rowconfigure(0, weight=1)
         root.columnconfigure(0, weight=1)
 
-        controls = ttk.Frame(container)
-        controls.grid(row=0, column=0, sticky="ew")
-        controls.columnconfigure(5, weight=1)
+        header = ttk.Frame(container, style="App.TFrame")
+        header.grid(row=0, column=0, sticky="ew", pady=(0, 8))
+        header.columnconfigure(1, weight=1)
+        ttk.Label(header, text="FuzzyRec", style="Title.TLabel").grid(row=0, column=0, sticky="w")
+        ttk.Label(
+            header,
+            text="Recommandation Mamdani avec preferences imprecises",
+            style="Muted.TLabel",
+        ).grid(row=0, column=1, sticky="w", padx=(12, 0))
+
+        controls = ttk.Frame(container, style="Panel.TFrame", padding=8)
+        controls.grid(row=1, column=0, sticky="ew")
+        controls.columnconfigure(7, weight=1)
 
         self.load_button = ttk.Button(controls, text="Charger catalogue", command=self.load_catalog)
-        self.load_button.grid(row=0, column=0, padx=(0, 8))
-        ttk.Label(controls, text="User ID").grid(row=0, column=1, sticky="w")
+        self.load_button.grid(row=0, column=0, padx=(0, 8), pady=(0, 6))
+        self.dataset_button = ttk.Button(controls, text="Changer dossier", command=self.choose_dataset)
+        self.dataset_button.grid(row=0, column=1, padx=(0, 12), pady=(0, 6))
+        ttk.Label(controls, text="User ID").grid(row=0, column=2, sticky="w")
         user_entry = ttk.Entry(controls, textvariable=self.user_id_var, width=8)
-        user_entry.grid(row=0, column=2, padx=(4, 12))
-        ttk.Label(controls, text="Top-N").grid(row=0, column=3, sticky="w")
+        user_entry.grid(row=0, column=3, padx=(4, 12), pady=(0, 6))
+        ttk.Label(controls, text="Top-N").grid(row=0, column=4, sticky="w")
         top_n_entry = ttk.Entry(controls, textvariable=self.top_n_var, width=6)
-        top_n_entry.grid(row=0, column=4, padx=(4, 12))
+        top_n_entry.grid(row=0, column=5, padx=(4, 12), pady=(0, 6))
         recommend_button = ttk.Button(controls, text="Recommander", command=self.run_recommendations)
-        recommend_button.grid(row=0, column=5, sticky="w")
+        recommend_button.grid(row=0, column=6, sticky="w", pady=(0, 6))
+        ttk.Label(controls, text="Dataset").grid(row=1, column=0, sticky="w")
+        dataset_entry = ttk.Entry(controls, textvariable=self.dataset_path_var)
+        dataset_entry.grid(row=1, column=1, columnspan=7, sticky="ew")
         self.controls_to_lock = [user_entry, top_n_entry, recommend_button]
 
-        notebook = ttk.Notebook(container)
-        notebook.grid(row=1, column=0, sticky="nsew", pady=(12, 8))
+        body = ttk.PanedWindow(container, orient=tk.VERTICAL)
+        body.grid(row=2, column=0, sticky="nsew", pady=(8, 8))
+
+        notebook = ttk.Notebook(body)
         preferences_tab = ttk.Frame(notebook)
         membership_tab = ttk.Frame(notebook)
         notebook.add(preferences_tab, text="Preferences")
         notebook.add(membership_tab, text="Courbes")
+        body.add(notebook, weight=1)
 
         self.preferences_editor = PreferencesEditor(preferences_tab, on_change=self._on_preference_changed)
         self.preferences_editor.render().grid(row=0, column=0, sticky="nsew")
         preferences_tab.rowconfigure(0, weight=1)
         preferences_tab.columnconfigure(0, weight=1)
 
-        self.recommendations_view = RecommendationsView(container)
-        self.recommendations_view.render().grid(row=2, column=0, sticky="nsew", pady=(4, 8))
+        results_pane = ttk.PanedWindow(body, orient=tk.VERTICAL)
+        body.add(results_pane, weight=3)
+
+        recommendations_section = ttk.LabelFrame(results_pane, text="Films recommandes", padding=6)
+        self.recommendations_view = RecommendationsView(recommendations_section)
+        self.recommendations_view.render().grid(row=0, column=0, sticky="nsew")
+        recommendations_section.rowconfigure(0, weight=1)
+        recommendations_section.columnconfigure(0, weight=1)
+        results_pane.add(recommendations_section, weight=3)
         self.recommendations_view.tree.bind("<<TreeviewSelect>>", self._on_recommendation_selected)
 
-        self.explanation_view = ExplanationView(container)
-        self.explanation_view.render().grid(row=3, column=0, sticky="nsew")
+        explanation_section = ttk.LabelFrame(results_pane, text="Trace d'explication", padding=6)
+        self.explanation_view = ExplanationView(explanation_section)
+        self.explanation_view.render().grid(row=0, column=0, sticky="nsew")
+        explanation_section.rowconfigure(0, weight=1)
+        explanation_section.columnconfigure(0, weight=1)
+        results_pane.add(explanation_section, weight=2)
 
-        ttk.Label(container, textvariable=self.status_var).grid(row=4, column=0, sticky="w", pady=(8, 0))
+        ttk.Label(container, textvariable=self.status_var, style="Status.TLabel").grid(row=3, column=0, sticky="ew")
         self._membership_tab = membership_tab
-        container.rowconfigure(1, weight=1)
-        container.rowconfigure(2, weight=2)
-        container.rowconfigure(3, weight=1)
+        container.rowconfigure(2, weight=1)
         container.columnconfigure(0, weight=1)
         self._set_controls_enabled(False)
 
     def load_catalog(self) -> None:
         """Charger les donnees MovieLens et construire le pipeline."""
 
+        if self.dataset_path_var is not None and self.dataset_path_var.get().strip():
+            self.raw_dir = Path(self.dataset_path_var.get().strip()).expanduser()
+            self.dataset_path_var.set(str(self.raw_dir))
         self._set_status("Chargement du catalogue...")
         self._set_controls_enabled(False)
         try:
@@ -121,6 +157,20 @@ class MainWindow:
         self._build_membership_view()
         self._set_controls_enabled(True)
         self._set_status(f"Catalogue charge: {len(self.context.recommender.repository.movies)} films")
+
+    def choose_dataset(self) -> None:
+        """Selectionner un dossier MovieLens et recharger le catalogue."""
+
+        selected = filedialog.askdirectory(
+            title="Choisir un dossier MovieLens",
+            initialdir=str(self.raw_dir if self.raw_dir.exists() else Path.cwd()),
+        )
+        if not selected:
+            return
+        self.raw_dir = Path(selected)
+        if self.dataset_path_var is not None:
+            self.dataset_path_var.set(str(self.raw_dir))
+        self.load_catalog()
 
     def run_recommendations(self) -> None:
         """Produire le Top-N et afficher la premiere explication."""
@@ -205,3 +255,17 @@ class MainWindow:
     @staticmethod
     def _value(variable: tk.StringVar | None, default: str) -> str:
         return variable.get().strip() if variable is not None and variable.get().strip() else default
+
+    def _configure_style(self) -> None:
+        style = ttk.Style()
+        try:
+            style.theme_use("clam")
+        except tk.TclError:
+            pass
+        style.configure("App.TFrame", background="#f6f7f9")
+        style.configure("Panel.TFrame", background="#ffffff", relief="flat")
+        style.configure("Title.TLabel", background="#f6f7f9", foreground="#1f2937", font=("TkDefaultFont", 16, "bold"))
+        style.configure("Muted.TLabel", background="#f6f7f9", foreground="#667085")
+        style.configure("Status.TLabel", background="#eef2f7", foreground="#344054", padding=(8, 5))
+        style.configure("Treeview", rowheight=24)
+        style.configure("TNotebook", padding=2)

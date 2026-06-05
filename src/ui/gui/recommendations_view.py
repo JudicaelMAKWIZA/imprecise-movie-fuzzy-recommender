@@ -34,12 +34,14 @@ class RecommendationsView:
         widths = {"rank": 48, "movie_id": 80, "score": 80, "title": 420}
         for column, label in headings.items():
             self.tree.heading(column, text=label)
-            self.tree.column(column, width=widths[column], anchor="w")
+            self.tree.column(column, width=widths[column], anchor="w", stretch=column == "title")
 
         scrollbar = ttk.Scrollbar(self.frame, orient="vertical", command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scrollbar.set)
+        horizontal_scrollbar = ttk.Scrollbar(self.frame, orient="horizontal", command=self.tree.xview)
+        self.tree.configure(yscrollcommand=scrollbar.set, xscrollcommand=horizontal_scrollbar.set)
         self.tree.grid(row=0, column=0, sticky="nsew")
         scrollbar.grid(row=0, column=1, sticky="ns")
+        horizontal_scrollbar.grid(row=1, column=0, sticky="ew")
         self.frame.rowconfigure(0, weight=1)
         self.frame.columnconfigure(0, weight=1)
         return self.frame

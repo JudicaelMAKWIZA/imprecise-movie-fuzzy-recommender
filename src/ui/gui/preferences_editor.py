@@ -47,7 +47,7 @@ class PreferencesEditor:
             return self.frame
 
         ttk.Label(self.frame, text="Preferences genres").grid(row=0, column=0, sticky="w")
-        self.canvas = tk.Canvas(self.frame, height=180, highlightthickness=0)
+        self.canvas = tk.Canvas(self.frame, height=135, highlightthickness=0)
         scrollbar = ttk.Scrollbar(self.frame, orient="vertical", command=self.canvas.yview)
         self.scrollable_frame = ttk.Frame(self.canvas)
         self.scrollable_frame.bind(
@@ -95,7 +95,7 @@ class PreferencesEditor:
             self.label_vars[genre] = label_var
             self.mode_vars[genre] = mode_var
 
-            ttk.Label(self.scrollable_frame, text=genre, width=18).grid(row=row, column=0, sticky="w", padx=(0, 8))
+            ttk.Label(self.scrollable_frame, text=genre, width=14).grid(row=row, column=0, sticky="w", padx=(0, 6), pady=1)
             scale = ttk.Scale(
                 self.scrollable_frame,
                 from_=0.0,
@@ -104,8 +104,8 @@ class PreferencesEditor:
                 variable=value_var,
                 command=lambda raw, selected=genre: self._on_scale_changed(selected, raw),
             )
-            scale.grid(row=row, column=1, sticky="ew", padx=(0, 8))
-            ttk.Label(self.scrollable_frame, textvariable=label_var, width=12).grid(row=row, column=2, sticky="w")
+            scale.grid(row=row, column=1, sticky="ew", padx=(0, 6), pady=1)
+            ttk.Label(self.scrollable_frame, textvariable=label_var, width=9).grid(row=row, column=2, sticky="w", pady=1)
             upper_scale = ttk.Scale(
                 self.scrollable_frame,
                 from_=0.0,
@@ -114,17 +114,17 @@ class PreferencesEditor:
                 variable=upper_var,
                 command=lambda _raw, selected=genre: self._on_interval_changed(selected),
             )
-            upper_scale.grid(row=row, column=3, sticky="ew", padx=(0, 8))
+            upper_scale.grid(row=row, column=3, sticky="ew", padx=(0, 6), pady=1)
             upper_scale.grid_remove()
             self.upper_scales[genre] = upper_scale
             mode = ttk.Combobox(
                 self.scrollable_frame,
                 textvariable=mode_var,
                 values=MODE_VALUES,
-                width=12,
+                width=11,
                 state="readonly",
             )
-            mode.grid(row=row, column=4, sticky="e")
+            mode.grid(row=row, column=4, sticky="e", pady=1)
             mode.bind("<<ComboboxSelected>>", lambda _event, selected=genre: self._on_mode_changed(selected))
         self.scrollable_frame.columnconfigure(1, weight=1)
         self.scrollable_frame.columnconfigure(3, weight=1)

@@ -73,7 +73,9 @@ class MembershipView:
             self.highlight_values.pop(key, None)
             line = self.highlight_lines.pop(key, None)
             if line is not None:
+                axis = self.axes[variable_name]
                 line.remove()
+                self._sync_legend(variable_name, axis)
                 self._redraw(variable_name)
             return
         variable = self.variables[variable_name]
@@ -85,7 +87,7 @@ class MembershipView:
             line_label = label or "valeur courante"
             line = axis.axvline(float(value), linestyle="--", linewidth=1.2, label=line_label)
             self.highlight_lines[key] = line
-            axis.legend()
+            self._sync_legend(variable_name, axis)
         else:
             line.set_xdata([float(value), float(value)])
         self._redraw(variable_name)
@@ -136,3 +138,17 @@ class MembershipView:
         canvas = self.canvases.get(variable_name)
         if canvas is not None:
             canvas.draw_idle()
+
+    def _sync_legend(self, variable_name: str, axis: Axes) -> None:
+        handles: list[Line2D] = []
+        labels: list[str] = []
+        for (key_variable, label), line in self.highlight_lines.items():
+            if key_variable == variable_name and line.axes is axis:
+                handles.append(line)
+                labels.append(label or "valeur courante")
+        if handles:
+            axis.legend(handles, labels)
+            return
+        legend = axis.get_legend()
+        if legend is not None:
+            legend.remove()

@@ -93,9 +93,32 @@ def test_preferences_editor_updates_genres_after_catalog_load(tmp_path: Path) ->
         window._build_widgets(root)
         window.load_catalog()
 
+        assert window.dataset_path_var is not None
+        assert window.dataset_path_var.get() == str(tmp_path)
         assert window.preferences_editor is not None
         assert "Comedy" in window.preferences_editor.value_vars
         assert "Sci-Fi" in window.preferences_editor.value_vars
+    finally:
+        root.destroy()
+
+
+def test_main_window_choose_dataset_reloads_selected_directory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Le bouton de choix de dossier recharge le catalogue selectionne."""
+
+    _write_cli_movielens_dataset(tmp_path)
+    monkeypatch.setattr("ui.gui.main_window.filedialog.askdirectory", lambda **_kwargs: str(tmp_path))
+    root = _tk_root()
+    try:
+        window = MainWindow(raw_dir=tmp_path / "missing")
+        window.root = root
+        window._build_widgets(root)
+
+        window.choose_dataset()
+
+        assert window.raw_dir == tmp_path
+        assert window.dataset_path_var is not None
+        assert window.dataset_path_var.get() == str(tmp_path)
+        assert window.context is not None
     finally:
         root.destroy()
 
@@ -141,6 +164,13 @@ def test_membership_view_creates_figures() -> None:
         assert id(view.canvases["genre_preference"]) == canvas_id
         assert view.highlight_values[("genre_preference", "Action")] == pytest.approx(0.7)
         assert view.highlight_values[("genre_preference", "Drama")] == pytest.approx(0.8)
+
+        view.update_highlight("genre_preference", None, label="Action")
+
+        assert set(view.highlight_lines) == {("genre_preference", "Drama")}
+        legend = view.axes["genre_preference"].get_legend()
+        assert legend is not None
+        assert [text.get_text() for text in legend.get_texts()] == ["Drama"]
     finally:
         root.destroy()
 

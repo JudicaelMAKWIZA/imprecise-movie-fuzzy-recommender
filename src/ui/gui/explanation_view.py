@@ -17,12 +17,11 @@ class ExplanationView:
     def render(self) -> ttk.Frame:
         """Afficher la zone d'explication."""
 
-        ttk.Label(self.frame, text="Explication").grid(row=0, column=0, sticky="w")
         scrollbar = ttk.Scrollbar(self.frame, orient="vertical", command=self.text.yview)
         self.text.configure(yscrollcommand=scrollbar.set)
-        self.text.grid(row=1, column=0, sticky="nsew", pady=(4, 0))
-        scrollbar.grid(row=1, column=1, sticky="ns", pady=(4, 0))
-        self.frame.rowconfigure(1, weight=1)
+        self.text.grid(row=0, column=0, sticky="nsew")
+        scrollbar.grid(row=0, column=1, sticky="ns")
+        self.frame.rowconfigure(0, weight=1)
         self.frame.columnconfigure(0, weight=1)
         return self.frame
 

@@ -141,7 +141,8 @@ python main.py recommend --user-id 1 --top-n 10 --set-genre "Sci-Fi=forte,Action
 ```
 
 Toutes les commandes qui chargent les données acceptent `--data-dir` pour pointer
-vers un dossier MovieLens compatible :
+vers un dossier MovieLens compatible contenant au minimum `movies.csv`,
+`ratings.csv`, `tags.csv` et `links.csv` :
 
 ```bash
 python main.py --data-dir data/movie dataset-stats --show-genres
@@ -162,6 +163,12 @@ Lancer la GUI :
 ```bash
 python main.py gui
 ```
+
+La fenêtre charge `data/movie` par défaut. Utilisez `python main.py gui
+--data-dir <dossier>` pour démarrer sur un autre jeu MovieLens, ou le bouton
+`Changer dossier` dans l'interface pour sélectionner et recharger un dataset.
+Les zones `Préférences`, `Films recommandés` et `Trace d'explication` sont
+redimensionnables et conservent leurs scrollbars lorsque la fenêtre est réduite.
 
 ---
 
