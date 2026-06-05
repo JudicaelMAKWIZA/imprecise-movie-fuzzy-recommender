@@ -64,12 +64,89 @@ variables:
       tres_populaire:
         type: trapezoidal
         parameters: [200, 280, 350, 350]
+  recommendation_score:
+    universe: [0.0, 1.0]
+    role: output
+    terms:
+      tres_faible:
+        type: trapezoidal
+        parameters: [0.0, 0.0, 0.1, 0.25]
+      faible:
+        type: triangular
+        parameters: [0.15, 0.3, 0.45]
+      moyen:
+        type: triangular
+        parameters: [0.35, 0.5, 0.65]
+      fort:
+        type: triangular
+        parameters: [0.55, 0.7, 0.85]
+      tres_fort:
+        type: trapezoidal
+        parameters: [0.75, 0.9, 1.0, 1.0]
 
 rule_base:
   minimal_v1:
     expected_rule_count: 8
-    rules: []
-    todo: "Declarer les 8 regles initiales sans modifier leur interpretabilite."
+    status: "Implemented in src/fuzzy/rule_base.py"
+    variables: [genre_preference, average_rating, popularity]
+    output: recommendation_score
+    rules:
+      - id: R1
+        if:
+          genre_preference: forte
+          average_rating: excellente
+          popularity: tres_populaire
+        then:
+          recommendation_score: tres_fort
+      - id: R2
+        if:
+          genre_preference: forte
+          average_rating: excellente
+          popularity: confidentiel
+        then:
+          recommendation_score: fort
+      - id: R3
+        if:
+          genre_preference: forte
+          average_rating: bonne
+          popularity: populaire
+        then:
+          recommendation_score: fort
+      - id: R4
+        if:
+          genre_preference: moyenne
+          average_rating: excellente
+          popularity: tres_populaire
+        then:
+          recommendation_score: fort
+      - id: R5
+        if:
+          genre_preference: moyenne
+          average_rating: bonne
+          popularity: modere
+        then:
+          recommendation_score: moyen
+      - id: R6
+        if:
+          genre_preference: faible
+          average_rating: excellente
+          popularity: tres_populaire
+        then:
+          recommendation_score: moyen
+      - id: R7
+        if:
+          genre_preference: forte
+          average_rating: mauvaise
+          popularity: populaire
+        then:
+          recommendation_score: faible
+      - id: R8
+        if:
+          genre_preference: faible
+          average_rating: mauvaise
+          popularity: confidentiel
+        then:
+          recommendation_score: tres_faible
   intermediate:
     expected_rule_count: 20
     rules: []

@@ -1,9 +1,4 @@
-"""Profil utilisateur flou.
-
-Le profil utilisateur represente les preferences linguistiques, notamment les
-preferences par genre pour la V1. Les valeurs numeriques restent crisp tant que
-la fuzzification n'a pas ete appliquee par `Fuzzifier`.
-"""
+"""Profil utilisateur flou."""
 
 from __future__ import annotations
 
@@ -19,9 +14,8 @@ class GenrePreference:
         value: Intensite crisp dans `[0, 1]`, a fuzzifier ensuite.
         label: Libelle optionnel saisi par l'utilisateur, comme `beaucoup`.
 
-    TODO:
-        - Mapper les libelles linguistiques vers des valeurs crisp.
-        - Valider les genres disponibles dans le dataset.
+    `value` est l'intensite crisp utilisee par la fuzzification. Le libelle est
+    conserve pour l'interface et les explications futures.
     """
 
     genre: str
@@ -39,10 +33,8 @@ class UserProfile:
         recency_preference: Champ reserve pour une version future.
         popularity_importance: Champ reserve pour ponderer la popularite.
 
-    TODO:
-        - Construire un profil depuis les notes historiques.
-        - Construire un profil depuis des choix CLI ou GUI.
-        - Serialiser le profil pour reutilisation.
+    Le profil V1 est volontairement leger : il porte uniquement les preferences
+    par genre et fournit des helpers pour le pre-filtrage et le scoring.
     """
 
     user_id: int | None = None
@@ -52,9 +44,43 @@ class UserProfile:
 
     def set_genre_preference(self, preference: GenrePreference) -> None:
         """Ajouter ou remplacer une preference par genre.
-
-        TODO:
-            Valider la valeur, le genre et le libelle linguistique.
         """
 
-        raise NotImplementedError("TODO: modifier une preference de genre.")
+        if not preference.genre.strip():
+            raise ValueError("Le genre ne peut pas etre vide.")
+        if preference.value is not None and not 0.0 <= preference.value <= 1.0:
+            raise ValueError("La preference de genre doit appartenir a [0, 1].")
+        self.genre_preferences[preference.genre] = preference
+
+    def preferred_genres(self, threshold: float = 0.5) -> list[str]:
+        """Retourner les genres dont la preference atteint le seuil donne."""
+
+        return [
+            preference.genre
+            for preference in self.genre_preferences.values()
+            if preference.value is not None and preference.value >= threshold
+        ]
+
+    def genre_preference_for_movie(self, movie_genres: list[str]) -> float:
+        """Calculer une preference crisp pour un film.
+
+        La V1 utilise la preference maximale parmi les genres du film. Si le
+        profil ne contient aucune preference, la valeur neutre `0.5` est
+        retournee. Si le profil contient des preferences mais aucune ne concerne
+        le film, la valeur est `0.0`.
+        """
+
+        if not self.genre_preferences:
+            return 0.5
+
+        preferences_by_genre = {
+            genre.casefold().strip(): preference.value
+            for genre, preference in self.genre_preferences.items()
+            if preference.value is not None
+        }
+        matching_values = [
+            preferences_by_genre[genre.casefold().strip()]
+            for genre in movie_genres
+            if genre.casefold().strip() in preferences_by_genre
+        ]
+        return max(matching_values, default=0.0)

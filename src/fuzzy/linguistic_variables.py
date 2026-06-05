@@ -7,6 +7,10 @@ par les specifications sont :
 - `genre_preference` sur `[0, 1]` ;
 - `average_rating` sur `[0.5, 5.0]` ;
 - `popularity` sur `[0, 350]`.
+
+La variable de sortie `recommendation_score` est aussi declaree pour que la
+base de regles puisse rester coherente avec les futurs modules d'inference et
+de defuzzification.
 """
 
 from __future__ import annotations
@@ -144,8 +148,24 @@ def build_popularity_variable() -> LinguisticVariable:
     return variable
 
 
+def build_recommendation_score_variable() -> LinguisticVariable:
+    """Build the linguistic output variable for recommendation scores."""
+
+    variable = LinguisticVariable("recommendation_score", 0.0, 1.0, label="Score de recommandation")
+    variable.add_fuzzy_set(
+        FuzzySet("tres_faible", TrapezoidalMembershipFunction(0.0, 0.0, 0.1, 0.25), label="Tres faible")
+    )
+    variable.add_fuzzy_set(FuzzySet("faible", TriangularMembershipFunction(0.15, 0.3, 0.45), label="Faible"))
+    variable.add_fuzzy_set(FuzzySet("moyen", TriangularMembershipFunction(0.35, 0.5, 0.65), label="Moyen"))
+    variable.add_fuzzy_set(FuzzySet("fort", TriangularMembershipFunction(0.55, 0.7, 0.85), label="Fort"))
+    variable.add_fuzzy_set(
+        FuzzySet("tres_fort", TrapezoidalMembershipFunction(0.75, 0.9, 1.0, 1.0), label="Tres fort")
+    )
+    return variable
+
+
 def build_default_v1_variables() -> dict[str, LinguisticVariable]:
-    """Build every official V1 linguistic variable."""
+    """Build every official V1 input linguistic variable."""
 
     variables = {
         "genre_preference": build_genre_preference_variable(),
@@ -153,4 +173,12 @@ def build_default_v1_variables() -> dict[str, LinguisticVariable]:
         "popularity": build_popularity_variable(),
     }
     logger.info("Variables linguistiques V1 construites: %s", list(variables))
+    return variables
+
+
+def build_default_v1_system_variables() -> dict[str, LinguisticVariable]:
+    """Build V1 input variables plus the output `recommendation_score`."""
+
+    variables = build_default_v1_variables()
+    variables["recommendation_score"] = build_recommendation_score_variable()
     return variables

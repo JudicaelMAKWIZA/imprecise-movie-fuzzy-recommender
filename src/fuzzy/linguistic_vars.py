@@ -9,8 +9,10 @@ from .linguistic_variables import (
     LinguisticVariable,
     build_average_rating_variable,
     build_default_v1_variables,
+    build_default_v1_system_variables,
     build_genre_preference_variable,
     build_popularity_variable,
+    build_recommendation_score_variable,
 )
 
 __all__ = [
@@ -18,6 +20,8 @@ __all__ = [
     "LinguisticVariable",
     "build_average_rating_variable",
     "build_default_v1_variables",
+    "build_default_v1_system_variables",
     "build_genre_preference_variable",
     "build_popularity_variable",
+    "build_recommendation_score_variable",
 ]

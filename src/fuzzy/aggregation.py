@@ -1,8 +1,7 @@
 """Agregation des consequents flous.
 
 Dans le modele Mamdani retenu, plusieurs regles peuvent activer le meme terme
-de sortie. L'agregation devra combiner ces consequents, typiquement avec un
-maximum, avant la defuzzification.
+de sortie. L'agregation V1 combine ces consequents par maximum.
 """
 
 from __future__ import annotations
@@ -14,13 +13,7 @@ from .inference_engine import RuleActivation
 
 @dataclass
 class ConsequentAggregator:
-    """Service responsable de l'agregation des sorties de regles.
-
-    TODO:
-        - Implementer l'agregation max recommandee par les specifications.
-        - Prevoir un point d'extension pour comparer d'autres t-conormes.
-        - Retourner une forme exploitable par la defuzzification.
-    """
+    """Service responsable de l'agregation des sorties de regles."""
 
     method: str = "max"
 
@@ -32,9 +25,15 @@ class ConsequentAggregator:
 
         Returns:
             Degres agregees par terme de sortie.
-
-        TODO:
-            Implementer l'agregation apres la base de regles V1.
         """
 
-        raise NotImplementedError("TODO: implementer l'agregation des consequents.")
+        if self.method != "max":
+            raise ValueError(f"Methode d'agregation non supportee en V1: {self.method}")
+
+        aggregated: dict[str, float] = {}
+        for activation in activations:
+            if not activation.is_active:
+                continue
+            term = activation.consequent_term
+            aggregated[term] = max(aggregated.get(term, 0.0), activation.degree)
+        return aggregated

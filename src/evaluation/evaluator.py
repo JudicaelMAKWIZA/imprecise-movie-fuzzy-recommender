@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from collections.abc import Iterable
+
+from .metrics import coverage, diversity_score, precision_at_n, recall_at_n
 
 
 @dataclass
@@ -13,8 +16,7 @@ class EvaluationReport:
         metrics: Valeurs numeriques par nom de metrique.
         notes: Commentaires qualitatifs ou limites de l'experience.
 
-    TODO:
-        Ajouter l'export JSON pour la CLI.
+    Le rapport reste volontairement simple et serialisable.
     """
 
     metrics: dict[str, float] = field(default_factory=dict)
@@ -25,16 +27,37 @@ class EvaluationReport:
 class Evaluator:
     """Service responsable du protocole d'evaluation.
 
-    TODO:
-        - Diviser les donnees en train/test.
-        - Generer des recommandations Top-N.
-        - Comparer avec les notes reelles.
-        - Comparer avec une baseline de popularite.
+    Ce service couvre l'evaluation simple necessaire a la V1 demonstrable. Les
+    protocoles train/test plus avances seront ajoutes lorsque la recommandation
+    sera branchee aux historiques utilisateurs.
     """
 
     top_n: int = 10
 
-    def evaluate(self) -> EvaluationReport:
-        """Executer le protocole d'evaluation complet."""
+    def evaluate_lists(
+        self,
+        recommended: Iterable[int],
+        relevant: Iterable[int],
+        full_catalog: Iterable[int],
+        genres_by_movie: dict[int, set[str]] | None = None,
+    ) -> EvaluationReport:
+        """Evaluer une liste de recommandations deja produite."""
 
-        raise NotImplementedError("TODO: implementer l'evaluation complete.")
+        recommended_list = list(recommended)
+        relevant_list = list(relevant)
+        report = EvaluationReport(
+            metrics={
+                "precision_at_n": precision_at_n(recommended_list, relevant_list, self.top_n),
+                "recall_at_n": recall_at_n(recommended_list, relevant_list, self.top_n),
+                "coverage": coverage(recommended_list, full_catalog),
+                "diversity": diversity_score(recommended_list[: self.top_n], genres_by_movie),
+            }
+        )
+        if not relevant_list:
+            report.notes.append("Aucun film pertinent fourni ; le rappel vaut 0.0 par convention.")
+        return report
+
+    def evaluate(self) -> EvaluationReport:
+        """Retourner un rapport vide explicite pour l'orchestration future."""
+
+        return EvaluationReport(notes=["Evaluation complete non branchee aux donnees utilisateurs en V1."])

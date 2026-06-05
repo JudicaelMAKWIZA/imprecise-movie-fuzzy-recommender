@@ -22,10 +22,7 @@ Cette version implemente les fondations du projet :
 
 Restent volontairement hors de cette phase :
 
-- base de regles floues ;
-- moteur d'inference Mamdani ;
-- defuzzification ;
-- logique de recommandation ;
+- moteur d'explications textuelles ;
 - GUI fonctionnelle.
 
 ## Architecture
@@ -84,6 +81,12 @@ python main.py recommend --user-id 42 --top-n 10 --explain
 - `src/fuzzy/membership_functions.py` : fonctions triangulaire et trapezoidale.
 - `src/fuzzy/linguistic_variables.py` : variables V1.
 - `src/fuzzy/fuzzifier.py` : transformation crisp vers degres d'appartenance.
+- `src/fuzzy/rule_base.py` : base de 8 regles V1 interpretables.
+- `src/fuzzy/inference_engine.py` : activation Mamdani, implication, aggregation
+  et traces d'inference.
+- `src/fuzzy/defuzzification.py` : defuzzification centroide.
+- `src/recommender/fuzzy_recommender.py` : pre-filtrage, scoring, classement et
+  Top-N.
 - `src/visualization/membership_plots.py` : graphiques matplotlib.
 
 ## Tests
@@ -92,9 +95,14 @@ python main.py recommend --user-id 42 --top-n 10 --explain
 python -m pytest -q -p no:cacheprovider
 ```
 
+## Exemple CLI
+
+```bash
+python main.py infer --genre-pref 0.9 --rating 4.8 --popularity 300 --explain
+```
+
 ## Prochaines etapes
 
-1. Ajouter les 8 regles initiales.
-2. Implementer le moteur Mamdani.
-3. Implementer l'agregation et la defuzzification.
-4. Brancher la recommandation, les explications, puis la CLI.
+1. Implementer le moteur d'explications textuelles.
+2. Brancher la recommandation Top-N complete dans la CLI.
+3. Ajouter l'evaluation sur utilisateurs MovieLens train/test.

@@ -1,8 +1,4 @@
-"""Squelette de l'interface graphique.
-
-La GUI reste volontairement non implementee. Les classes de ce paquet servent a
-reserver les composants prevus par les specifications.
-"""
+"""Interface graphique Tkinter de demonstration du systeme FuzzyRec."""
 
 from .explanation_view import ExplanationView
 from .main_window import MainWindow

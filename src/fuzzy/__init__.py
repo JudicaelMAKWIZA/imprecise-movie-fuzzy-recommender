@@ -10,8 +10,10 @@ from .linguistic_variables import (
     LinguisticVariable,
     build_average_rating_variable,
     build_default_v1_variables,
+    build_default_v1_system_variables,
     build_genre_preference_variable,
     build_popularity_variable,
+    build_recommendation_score_variable,
 )
 from .membership import MembershipDefinition
 from .membership_functions import (
@@ -21,7 +23,7 @@ from .membership_functions import (
     trapezoidal,
     triangular,
 )
-from .rule_base import FuzzyRule, RuleBase
+from .rule_base import FuzzyAntecedent, FuzzyConsequent, FuzzyRule, RuleBase, RuleValidationError
 
 __all__ = [
     "ConsequentAggregator",
@@ -29,6 +31,8 @@ __all__ = [
     "Fuzzifier",
     "FuzzySet",
     "FuzzyRule",
+    "FuzzyAntecedent",
+    "FuzzyConsequent",
     "InferenceResult",
     "LinguisticTerm",
     "LinguisticVariable",
@@ -36,12 +40,15 @@ __all__ = [
     "MembershipDefinition",
     "MembershipFunction",
     "RuleBase",
+    "RuleValidationError",
     "TrapezoidalMembershipFunction",
     "TriangularMembershipFunction",
     "build_average_rating_variable",
     "build_default_v1_variables",
+    "build_default_v1_system_variables",
     "build_genre_preference_variable",
     "build_popularity_variable",
+    "build_recommendation_score_variable",
     "trapezoidal",
     "triangular",
 ]

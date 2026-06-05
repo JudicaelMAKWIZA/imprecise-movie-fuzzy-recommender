@@ -1,15 +1,17 @@
 """Point d'entree principal du projet FuzzyRec.
 
 Ce module delegue l'execution a l'interface en ligne de commande declaree dans
-`src/ui/cli/commands.py`. La GUI n'est pas lancee ici pour la Version 1, car les
-decisions architecturales imposent que le projet soit demonstrable depuis le
-terminal avant le developpement graphique.
-
-TODO:
-    - Ajouter un mode de lancement GUI lorsque l'interface graphique sera
-      implementee.
-    - Centraliser le chargement de configuration avant l'appel aux commandes.
+`src/ui/cli/commands.py`. La commande `python main.py gui` lance l'interface
+Tkinter de demonstration, tandis que les autres commandes restent utilisables
+depuis le terminal.
 """
+
+from pathlib import Path
+import sys
+
+SRC_DIR = Path(__file__).resolve().parent / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 from ui.cli.commands import main
 
