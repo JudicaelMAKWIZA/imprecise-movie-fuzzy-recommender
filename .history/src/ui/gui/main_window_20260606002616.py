@@ -73,30 +73,23 @@ class MainWindow:
         # Reserve three columns: 0=logo, 1=title, 2=subtitle (subtitle expands)
         header.columnconfigure(2, weight=1)
 
-        # Charger le logo si present (à gauche) et supprimer tout encadrement visible
+        # Charger le logo si present sans faire bouger l'agencement existant
         try:
             logo_path = Path(__file__).resolve().parents[3] / "Brummel_TPGAMA" / "images.png"
             if logo_path.exists():
                 img = tk.PhotoImage(file=str(logo_path))
+                # Reduire approximativement la hauteur si l'image est trop grande
                 desired_height = 36
                 if img.height() > desired_height:
                     factor = max(1, int(round(img.height() / desired_height)))
                     img = img.subsample(factor, factor)
                 self._logo_image = img
-                # Utiliser tk.Label pour controler bordures et fond et eviter toute ombre
-                tk.Label(
-                    header,
-                    image=self._logo_image,
-                    bg="#f6f7f9",
-                    bd=0,
-                    highlightthickness=0,
-                    relief=tk.FLAT,
-                ).grid(row=0, column=0, sticky="w", padx=(0, 8))
+                ttk.Label(header, image=self._logo_image, style="App.TLabel").grid(row=0, column=0, sticky="w", padx=(0, 8))
             else:
-                tk.Label(header, text="", bg="#f6f7f9", bd=0, highlightthickness=0).grid(row=0, column=0, sticky="w")
+                ttk.Label(header, text="", style="App.TLabel").grid(row=0, column=0, sticky="w")
         except Exception:
-            # En cas d'erreur d'affichage, laisser un emplacement vide sans bordure
-            tk.Label(header, text="", bg="#f6f7f9", bd=0, highlightthickness=0).grid(row=0, column=0, sticky="w")
+            # En cas d'erreur d'affichage, laisser un emplacement vide
+            ttk.Label(header, text="", style="App.TLabel").grid(row=0, column=0, sticky="w")
 
         # Titres à droite du logo
         ttk.Label(header, text="FuzzyRec", style="Title.TLabel").grid(row=0, column=1, sticky="w")
@@ -143,15 +136,14 @@ class MainWindow:
         preferences_tab.columnconfigure(0, weight=1)
 
         results_pane = ttk.PanedWindow(body, orient=tk.VERTICAL)
-        # Faire occuper results_pane 50% de la fenetre (notebook 50%)
-        body.add(results_pane, weight=1)
+        body.add(results_pane, weight=3)
 
         recommendations_section = ttk.LabelFrame(results_pane, text="Films recommandes", padding=6)
         self.recommendations_view = RecommendationsView(recommendations_section)
         self.recommendations_view.render().grid(row=0, column=0, sticky="nsew")
         recommendations_section.rowconfigure(0, weight=1)
         recommendations_section.columnconfigure(0, weight=1)
-        results_pane.add(recommendations_section, weight=1)
+        results_pane.add(recommendations_section, weight=3)
         self.recommendations_view.tree.bind("<<TreeviewSelect>>", self._on_recommendation_selected)
 
         explanation_section = ttk.LabelFrame(results_pane, text="Trace d'explication", padding=6)
@@ -159,7 +151,7 @@ class MainWindow:
         self.explanation_view.render().grid(row=0, column=0, sticky="nsew")
         explanation_section.rowconfigure(0, weight=1)
         explanation_section.columnconfigure(0, weight=1)
-        results_pane.add(explanation_section, weight=1)
+        results_pane.add(explanation_section, weight=2)
 
         ttk.Label(container, textvariable=self.status_var, style="Status.TLabel").grid(row=3, column=0, sticky="ew")
         self._membership_tab = membership_tab

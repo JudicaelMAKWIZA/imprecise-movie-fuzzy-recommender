@@ -70,10 +70,18 @@ class MainWindow:
 
         header = ttk.Frame(container, style="App.TFrame")
         header.grid(row=0, column=0, sticky="ew", pady=(0, 8))
-        # Reserve three columns: 0=logo, 1=title, 2=subtitle (subtitle expands)
-        header.columnconfigure(2, weight=1)
+        # Reserve three columns: 0=title, 1=subtitle (expands), 2=logo (right)
+        header.columnconfigure(1, weight=1)
 
-        # Charger le logo si present (à gauche) et supprimer tout encadrement visible
+        # Titres à gauche
+        ttk.Label(header, text="FuzzyRec", style="Title.TLabel").grid(row=0, column=0, sticky="w")
+        ttk.Label(
+            header,
+            text="Recommandation Mamdani avec preferences imprecises",
+            style="Muted.TLabel",
+        ).grid(row=0, column=1, sticky="w", padx=(12, 0))
+
+        # Charger le logo (à droite) si present
         try:
             logo_path = Path(__file__).resolve().parents[3] / "Brummel_TPGAMA" / "images.png"
             if logo_path.exists():
@@ -83,28 +91,11 @@ class MainWindow:
                     factor = max(1, int(round(img.height() / desired_height)))
                     img = img.subsample(factor, factor)
                 self._logo_image = img
-                # Utiliser tk.Label pour controler bordures et fond et eviter toute ombre
-                tk.Label(
-                    header,
-                    image=self._logo_image,
-                    bg="#f6f7f9",
-                    bd=0,
-                    highlightthickness=0,
-                    relief=tk.FLAT,
-                ).grid(row=0, column=0, sticky="w", padx=(0, 8))
+                ttk.Label(header, image=self._logo_image, style="App.TLabel").grid(row=0, column=2, sticky="e", padx=(8, 0))
             else:
-                tk.Label(header, text="", bg="#f6f7f9", bd=0, highlightthickness=0).grid(row=0, column=0, sticky="w")
+                ttk.Label(header, text="", style="App.TLabel").grid(row=0, column=2, sticky="e")
         except Exception:
-            # En cas d'erreur d'affichage, laisser un emplacement vide sans bordure
-            tk.Label(header, text="", bg="#f6f7f9", bd=0, highlightthickness=0).grid(row=0, column=0, sticky="w")
-
-        # Titres à droite du logo
-        ttk.Label(header, text="FuzzyRec", style="Title.TLabel").grid(row=0, column=1, sticky="w")
-        ttk.Label(
-            header,
-            text="Recommandation Mamdani avec preferences imprecises",
-            style="Muted.TLabel",
-        ).grid(row=0, column=2, sticky="w", padx=(12, 0))
+            ttk.Label(header, text="", style="App.TLabel").grid(row=0, column=2, sticky="e")
 
         controls = ttk.Frame(container, style="Panel.TFrame", padding=8)
         controls.grid(row=1, column=0, sticky="ew")

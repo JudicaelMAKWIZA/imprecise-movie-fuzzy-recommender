@@ -189,25 +189,11 @@ class MembershipView:
             canvas.draw_idle()
 
     def _sync_legend(self, variable_name: str, axis: Axes) -> None:
-        handles = []
-        labels = []
-        for (key_variable, label), artists in self.highlight_lines.items():
-            if key_variable != variable_name:
-                continue
-            # artists may be a single artist or a list of artists
-            if not isinstance(artists, (list, tuple)):
-                artists = [artists]
-            # prefer an artist that is attached to this axis and has a label
-            chosen = None
-            for art in artists:
-                try:
-                    if getattr(art, "axes", None) is axis:
-                        chosen = art
-                        break
-                except Exception:
-                    continue
-            if chosen is not None:
-                handles.append(chosen)
+        handles: list[Line2D] = []
+        labels: list[str] = []
+        for (key_variable, label), line in self.highlight_lines.items():
+            if key_variable == variable_name and line.axes is axis:
+                handles.append(line)
                 labels.append(label or "valeur courante")
         if handles:
             axis.legend(handles, labels)

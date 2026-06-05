@@ -7,7 +7,6 @@ import tkinter as tk
 from tkinter import ttk
 
 from fuzzy.fuzzifier import Fuzzifier
-from .scroll_bindings import enable_mousewheel_scroll
 from recommender.user_profile import GenrePreferenceValue, IntervalGenrePreference, LinguisticGenrePreference
 
 
@@ -63,11 +62,6 @@ class PreferencesEditor:
         self.canvas.configure(yscrollcommand=scrollbar.set)
         self.canvas.grid(row=1, column=0, sticky="nsew", pady=(4, 0))
         scrollbar.grid(row=1, column=1, sticky="ns", pady=(4, 0))
-        # Activer le défilement par molette / geste (2 doigts) sur le canvas
-        try:
-            enable_mousewheel_scroll(self.canvas)
-        except Exception:
-            pass
         self.frame.rowconfigure(1, weight=1)
         self.frame.columnconfigure(0, weight=1)
         self._rendered = True
