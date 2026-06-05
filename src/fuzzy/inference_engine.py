@@ -12,6 +12,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Mapping
 
+from .aggregation import ConsequentAggregator
 from .rule_base import FuzzyRule, RuleBase
 
 logger = logging.getLogger(__name__)
@@ -160,12 +161,7 @@ class MamdaniInferenceEngine:
     def aggregate_consequents(self, activations: list[RuleActivation]) -> dict[str, float]:
         """Agreger les consequents actifs par maximum."""
 
-        aggregated: dict[str, float] = {}
-        for activation in activations:
-            implied = self.imply_consequent(activation)
-            for term, degree in implied.items():
-                aggregated[term] = max(aggregated.get(term, 0.0), degree)
-        return aggregated
+        return ConsequentAggregator().aggregate(activations)
 
     @staticmethod
     def _membership_degree(

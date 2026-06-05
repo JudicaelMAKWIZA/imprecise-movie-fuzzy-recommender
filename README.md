@@ -24,10 +24,12 @@ Le système implémente un moteur flou de type Mamdani développé principalemen
 * Inférence Mamdani
 * Agrégation par maximum
 * Défuzzification par centroïde
+* Chargement des variables et règles depuis `config/fuzzy_config.yaml`
 
 ### Recommandation
 
 * Construction de profils utilisateurs
+* Préférences crisp (`Sci-Fi=0.9`) ou linguistiques (`Sci-Fi=forte`)
 * Pré-filtrage de candidats
 * Évaluation floue des films
 * Calcul du score de recommandation
@@ -73,12 +75,10 @@ Interface graphique Tkinter permettant :
 Logique_Floue/
 ├── config/
 ├── data/
-│   ├── movie/
-│   └── processed/
+│   └── movie/
 ├── docs/
 │   └── rapport/
 ├── src/
-│   ├── data/
 │   ├── data_manager/
 │   ├── evaluation/
 │   ├── fuzzy/
@@ -132,6 +132,18 @@ Générer des recommandations :
 
 ```bash
 python main.py recommend --user-id 1 --top-n 10 --explain
+```
+
+Recommandation avec préférences explicites imprécises :
+
+```bash
+python main.py recommend --user-id 1 --top-n 10 --set-genre "Sci-Fi=forte,Action=0.8" --explain
+```
+
+Évaluer un utilisateur avec découpage temporel train/test :
+
+```bash
+python main.py evaluate --user-id 1 --top-n 10
 ```
 
 ### Interface graphique
@@ -243,13 +255,13 @@ Explications
 Exécuter la suite complète :
 
 ```bash
-python -m pytest
+./.venv/bin/pytest -q
 ```
 
 Résultat actuel :
 
 ```text
-71 tests réussis
+77 tests réussis le 2026-06-05 avec `./.venv/bin/pytest -q`
 0 échec
 ```
 

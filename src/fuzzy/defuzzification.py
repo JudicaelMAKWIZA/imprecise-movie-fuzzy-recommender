@@ -8,7 +8,7 @@ de sortie, puis calcule son centre de gravite discret.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Sequence
 
 import numpy as np
@@ -31,6 +31,11 @@ class Defuzzifier:
     method: str = "centroid"
     empty_output_value: float = 0.0
     resolution: int = 1001
+    _surface_cache: dict[tuple[object, ...], tuple[np.ndarray, dict[str, np.ndarray]]] = field(
+        default_factory=dict,
+        init=False,
+        repr=False,
+    )
 
     def centroid(self, universe: Sequence[float], memberships: Sequence[float]) -> float:
         """Calculer le centre de gravite d'une sortie floue.
@@ -48,14 +53,12 @@ class Defuzzifier:
         if len(universe) == 0:
             raise ValueError("universe ne peut pas etre vide.")
 
-        numerator = 0.0
-        denominator = 0.0
-        for x_value, membership in zip(universe, memberships):
-            degree = float(membership)
-            if not 0.0 <= degree <= 1.0:
-                raise ValueError("Les degres d'appartenance doivent rester dans [0, 1].")
-            numerator += float(x_value) * degree
-            denominator += degree
+        membership_array = np.asarray(memberships, dtype=float)
+        if np.any((membership_array < 0.0) | (membership_array > 1.0)):
+            raise ValueError("Les degres d'appartenance doivent rester dans [0, 1].")
+        universe_array = np.asarray(universe, dtype=float)
+        numerator = float(np.dot(universe_array, membership_array))
+        denominator = float(np.sum(membership_array))
 
         if denominator == 0.0:
             return self.empty_output_value
@@ -87,23 +90,41 @@ class Defuzzifier:
             return self.empty_output_value
 
         output_variable = variable or build_recommendation_score_variable()
-        universe = np.linspace(output_variable.universe_min, output_variable.universe_max, self.resolution)
-        aggregated_memberships: list[float] = []
+        universe, term_surfaces = self._term_surfaces(output_variable)
+        clipped_surfaces = []
+        for term, activation_degree in output_memberships.items():
+            if term not in term_surfaces:
+                raise ValueError(f"Terme de sortie inconnu pour {output_variable.name}: {term}")
+            numeric_activation = float(activation_degree)
+            if not 0.0 <= numeric_activation <= 1.0:
+                raise ValueError(f"Degre de sortie invalide pour {term}: {activation_degree}")
+            clipped_surfaces.append(np.minimum(numeric_activation, term_surfaces[term]))
+        aggregated_memberships = np.maximum.reduce(clipped_surfaces) if clipped_surfaces else np.zeros_like(universe)
 
-        for x_value in universe:
-            clipped_degrees: list[float] = []
-            for term, activation_degree in output_memberships.items():
-                if term not in output_variable.fuzzy_sets:
-                    raise ValueError(f"Terme de sortie inconnu pour {output_variable.name}: {term}")
-                numeric_activation = float(activation_degree)
-                if not 0.0 <= numeric_activation <= 1.0:
-                    raise ValueError(f"Degre de sortie invalide pour {term}: {activation_degree}")
-                term_degree = output_variable.fuzzy_sets[term].membership(float(x_value))
-                clipped_degrees.append(min(numeric_activation, term_degree))
-            aggregated_memberships.append(max(clipped_degrees, default=0.0))
-
-        score = self.centroid([float(value) for value in universe], aggregated_memberships)
+        score = self.centroid(universe, aggregated_memberships)
         return max(output_variable.universe_min, min(output_variable.universe_max, score))
+
+    def _term_surfaces(self, variable: LinguisticVariable) -> tuple[np.ndarray, dict[str, np.ndarray]]:
+        key = (
+            variable.name,
+            variable.universe_min,
+            variable.universe_max,
+            self.resolution,
+            tuple(
+                (term, fuzzy_set.membership_function.parameters)
+                for term, fuzzy_set in variable.fuzzy_sets.items()
+            ),
+        )
+        if key not in self._surface_cache:
+            universe = np.linspace(variable.universe_min, variable.universe_max, self.resolution)
+            self._surface_cache[key] = (
+                universe,
+                {
+                    term: np.asarray([fuzzy_set.membership(float(point)) for point in universe], dtype=float)
+                    for term, fuzzy_set in variable.fuzzy_sets.items()
+                },
+            )
+        return self._surface_cache[key]
 
     def bisector(self, universe: Sequence[float], memberships: Sequence[float]) -> float:
         """Calculer le bisecteur de surface d'une sortie floue.

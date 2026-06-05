@@ -47,30 +47,3 @@ class MembershipDefinition:
         if self.kind == "trapezoidal":
             return TrapezoidalMembershipFunction(*self.parameters)
         raise ValueError(f"Type de fonction d'appartenance non supporte: {self.kind}")
-
-
-def gaussian(x: float, mean: float, sigma: float) -> float:
-    """Evaluer une fonction d'appartenance gaussienne.
-
-    Cette forme est prevue pour experimentation ou comparaison, mais elle n'est
-    pas prioritaire pour la Version 1 de l'architecture retenue.
-
-    TODO:
-        Implementer uniquement si les variables linguistiques futures en ont
-        besoin ou si la validation scientifique l'exige.
-    """
-
-    raise NotImplementedError("La fonction gaussienne est hors perimetre V1.")
-
-
-def sigmoid(x: float, center: float, slope: float) -> float:
-    """Evaluer une fonction d'appartenance sigmoide.
-
-    Cette fonction pourra representer des transitions progressives. Elle reste
-    hors du coeur V1 tant que les termes triangulaires et trapezoidaux suffisent.
-
-    TODO:
-        Implementer apres stabilisation de la V1 minimale.
-    """
-
-    raise NotImplementedError("La fonction sigmoide est hors perimetre V1.")

@@ -20,12 +20,21 @@ R1 degree=1.0000 -> tres_fort
 
 ## Recommandation Top-N
 
-Le pipeline Top-N complet est expose par l'API Python via
-`recommender.fuzzy_recommender.FuzzyRecommender`. Le branchement CLI Top-N avec
-chargement de profils utilisateur sera ajoute apres le moteur d'explications.
-
-Exemple d'intention CLI cible :
+Le pipeline Top-N complet est branche a la CLI. Les preferences explicites
+peuvent etre crisp ou linguistiques :
 
 ```bash
-python main.py recommend --user-id 42 --top-n 10 --explain
+python main.py recommend --user-id 42 --top-n 10 --set-genre "Sci-Fi=forte,Action=0.8" --explain
 ```
+
+Sans `--set-genre`, le profil est derive de l'historique MovieLens de
+l'utilisateur.
+
+## Evaluation
+
+```bash
+python main.py evaluate --user-id 42 --top-n 10
+```
+
+La commande effectue un decoupage temporel 80/20 des notes de l'utilisateur :
+train pour le profil, test pour la pertinence.

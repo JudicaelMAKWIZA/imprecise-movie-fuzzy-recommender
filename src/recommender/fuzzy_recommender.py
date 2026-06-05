@@ -11,12 +11,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Mapping
 
-from data.movie_repository import MovieRepository
-from data.schemas import MovieFeatures
+from data_manager.movie_repository import MovieRepository
+from data_manager.schemas import MovieFeatures
 from fuzzy.defuzzification import Defuzzifier
-from fuzzy.fuzzification import Fuzzifier
+from fuzzy.fuzzifier import Fuzzifier
 from fuzzy.inference_engine import InferenceResult, MamdaniInferenceEngine
-from fuzzy.linguistic_variables import build_recommendation_score_variable
+from fuzzy.linguistic_variables import LinguisticVariable, build_recommendation_score_variable
 from recommender.user_profile import UserProfile
 
 
@@ -29,14 +29,14 @@ class Recommendation:
         score: Score crisp final dans `[0, 1]`.
         inference: Trace d'inference permettant l'explication.
         fuzzy_inputs: Entrees fuzzifiees ayant produit le score.
-        crisp_inputs: Valeurs crisp derivees du profil et du film.
+        crisp_inputs: Valeurs derivees du profil et du film.
     """
 
     movie: MovieFeatures
     score: float | None
     inference: InferenceResult | None = None
     fuzzy_inputs: Mapping[str, Mapping[str, float]] = field(default_factory=dict)
-    crisp_inputs: Mapping[str, float] = field(default_factory=dict)
+    crisp_inputs: Mapping[str, object] = field(default_factory=dict)
 
 
 @dataclass
@@ -54,6 +54,9 @@ class FuzzyRecommender:
     fuzzifier: Fuzzifier
     inference_engine: MamdaniInferenceEngine
     defuzzifier: Defuzzifier = field(default_factory=Defuzzifier)
+    output_variable: LinguisticVariable = field(default_factory=build_recommendation_score_variable)
+    preferred_genre_threshold: float = 0.5
+    neutral_average_rating: float = 3.5
 
     def recommend(self, profile: UserProfile, top_n: int = 10) -> list[Recommendation]:
         """Produire une liste Top-N de recommandations.
@@ -88,7 +91,7 @@ class FuzzyRecommender:
         inference = self.inference_engine.infer(fuzzy_inputs)
         score = self.defuzzifier.defuzzify(
             dict(inference.output_memberships),
-            variable=build_recommendation_score_variable(),
+            variable=self.output_variable,
         )
         inference.crisp_score = score
         return Recommendation(
@@ -103,14 +106,16 @@ class FuzzyRecommender:
         """Pre-filtrer les films selon les genres preferes.
         """
 
-        return self.repository.filter_by_genres(profile.preferred_genres())
+        preferred_genres = profile.preferred_genres(threshold=self.preferred_genre_threshold)
+        if not preferred_genres:
+            return []
+        return self.repository.filter_by_genres(preferred_genres)
 
-    @staticmethod
-    def _build_crisp_inputs(profile: UserProfile, movie: MovieFeatures) -> dict[str, float]:
-        average_rating = movie.average_rating if movie.average_rating is not None else 0.5
+    def _build_crisp_inputs(self, profile: UserProfile, movie: MovieFeatures) -> dict[str, object]:
+        average_rating = movie.average_rating if movie.average_rating is not None else self.neutral_average_rating
         popularity = movie.number_of_ratings if movie.number_of_ratings is not None else 0
         return {
-            "genre_preference": max(0.0, min(1.0, profile.genre_preference_for_movie(movie.genre_list))),
+            "genre_preference": profile.genre_preference_for_movie(movie.genre_list),
             "average_rating": max(0.5, min(5.0, float(average_rating))),
             "popularity": max(0.0, min(350.0, float(popularity))),
         }

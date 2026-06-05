@@ -2,13 +2,13 @@
 
 import pytest
 
-from data.movie_repository import MovieRepository
-from data.schemas import MovieFeatures
-from fuzzy.fuzzification import Fuzzifier
+from data_manager.movie_repository import MovieRepository
+from data_manager.schemas import MovieFeatures
+from fuzzy.fuzzifier import Fuzzifier
 from fuzzy.inference_engine import MamdaniInferenceEngine
 from fuzzy.rule_base import RuleBase
 from recommender.fuzzy_recommender import FuzzyRecommender
-from recommender.user_profile import GenrePreference, UserProfile
+from recommender.user_profile import GenrePreference, LinguisticGenrePreference, UserProfile
 
 
 def test_recommender_contract_exists() -> None:
@@ -77,6 +77,36 @@ def test_recommend_rejects_invalid_top_n() -> None:
 
     with pytest.raises(ValueError):
         recommender.recommend(_profile({"Sci-Fi": 0.9}), top_n=0)
+
+
+def test_linguistic_genre_preference_is_fuzzified_without_crisp_value() -> None:
+    """Un terme linguistique active directement le terme flou correspondant."""
+
+    recommender = _build_recommender([MovieFeatures(1, "Linguistic Sci-Fi", ["Sci-Fi"], 4.8, 300)])
+    profile = UserProfile(user_id=1)
+    profile.set_genre_preference(GenrePreference("Sci-Fi", LinguisticGenrePreference("forte")))
+
+    recommendation = recommender.score_movie(profile, recommender.repository.get_by_id(1))
+
+    assert recommendation.crisp_inputs["genre_preference"] == LinguisticGenrePreference("forte")
+    assert recommendation.fuzzy_inputs["genre_preference"]["forte"] == 1.0
+    assert recommendation.score > 0.8
+
+
+def test_missing_average_rating_uses_neutral_value() -> None:
+    """L'absence de note moyenne n'est pas assimilee a une mauvaise note."""
+
+    recommender = _build_recommender([MovieFeatures(1, "Unrated Sci-Fi", ["Sci-Fi"], None, 300)])
+    recommendation = recommender.score_movie(_profile({"Sci-Fi": 0.9}), recommender.repository.get_by_id(1))
+
+    assert recommendation.crisp_inputs["average_rating"] == pytest.approx(3.5)
+
+
+def test_neutral_profile_does_not_prefilter_whole_catalog() -> None:
+    """Sans genre au-dessus du seuil, l'Architecture B ne scanne pas tout."""
+
+    recommender = _build_recommender([MovieFeatures(1, "Drama", ["Drama"], 4.0, 20)])
+    assert recommender.prefilter_candidates(_profile({"Drama": 0.4})) == []
 
 
 def test_score_movie_without_matching_rule_returns_zero_score() -> None:

@@ -3,23 +3,20 @@
 import pandas as pd
 import pytest
 
-from recommender.pipeline_factory import build_profile, linguistic_level_to_value, parse_genre_preferences
+from recommender.pipeline_factory import build_profile, parse_genre_preferences
+from recommender.user_profile import LinguisticGenrePreference
 
 
 def test_parse_genre_preferences() -> None:
     """Les preferences CLI/GUI sont parsees dans un format commun."""
 
     assert parse_genre_preferences("Sci-Fi=0.9, Action=0.7") == {"Sci-Fi": 0.9, "Action": 0.7}
+    parsed = parse_genre_preferences("Sci-Fi=forte")
+    assert isinstance(parsed["Sci-Fi"], LinguisticGenrePreference)
+    assert parsed["Sci-Fi"].term == "forte"
 
     with pytest.raises(ValueError):
         parse_genre_preferences("Sci-Fi=1.5")
-
-
-def test_linguistic_level_to_value() -> None:
-    """Les niveaux linguistiques courants sont convertis en valeurs crisp."""
-
-    assert linguistic_level_to_value("beaucoup") == pytest.approx(0.8)
-    assert linguistic_level_to_value("forte") == pytest.approx(0.9)
 
 
 def test_build_profile_derives_genre_preferences_from_user_history() -> None:
@@ -49,6 +46,31 @@ def test_build_profile_derives_genre_preferences_from_user_history() -> None:
     assert profile.genre_preferences["Drama"].value == pytest.approx((3.0 - 0.5) / 4.5)
 
 
+def test_build_profile_weights_multi_genre_contributions() -> None:
+    """Un film multi-genres contribue partiellement a chaque genre."""
+
+    raw_data = {
+        "ratings": pd.DataFrame(
+            [
+                {"userId": 1, "movieId": 1, "rating": 5.0},
+                {"userId": 1, "movieId": 2, "rating": 1.0},
+            ]
+        ),
+        "movies": pd.DataFrame(
+            [
+                {"movieId": 1, "genres": "Sci-Fi|Action"},
+                {"movieId": 2, "genres": "Sci-Fi"},
+            ]
+        ),
+    }
+
+    profile = build_profile(user_id=1, raw_data=raw_data)
+
+    weighted_average = ((5.0 * 0.5) + (1.0 * 1.0)) / 1.5
+    assert profile.genre_preferences["Sci-Fi"].value == pytest.approx((weighted_average - 0.5) / 4.5)
+    assert profile.genre_preferences["Action"].value == pytest.approx(1.0)
+
+
 def test_build_profile_explicit_preferences_override_history() -> None:
     """Une saisie explicite prime sur l'historique."""
 
@@ -57,7 +79,7 @@ def test_build_profile_explicit_preferences_override_history() -> None:
         "movies": pd.DataFrame([{"movieId": 1, "genres": "Comedy"}]),
     }
 
-    profile = build_profile(user_id=1, raw_data=raw_data, explicit_preferences="Sci-Fi=0.9")
+    profile = build_profile(user_id=1, raw_data=raw_data, explicit_preferences="Sci-Fi=forte")
 
     assert list(profile.genre_preferences) == ["Sci-Fi"]
-    assert profile.genre_preferences["Sci-Fi"].value == pytest.approx(0.9)
+    assert isinstance(profile.genre_preferences["Sci-Fi"].value, LinguisticGenrePreference)

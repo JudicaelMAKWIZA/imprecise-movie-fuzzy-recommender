@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Mapping
 
-from data.schemas import MovieFeatures
+from data_manager.schemas import MovieFeatures
 from fuzzy.inference_engine import InferenceResult, RuleActivation
 from recommender.user_profile import UserProfile
 

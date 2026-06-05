@@ -7,8 +7,10 @@ de sortie. L'agregation V1 combine ces consequents par maximum.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from .inference_engine import RuleActivation
+if TYPE_CHECKING:
+    from .inference_engine import RuleActivation
 
 
 @dataclass

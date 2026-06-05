@@ -11,8 +11,8 @@ def test_membership_functions_are_declared() -> None:
 
     assert callable(membership.triangular)
     assert callable(membership.trapezoidal)
-    assert callable(membership.gaussian)
-    assert callable(membership.sigmoid)
+    assert not hasattr(membership, "gaussian")
+    assert not hasattr(membership, "sigmoid")
 
 
 def test_triangular_membership_values() -> None:

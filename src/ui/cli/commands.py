@@ -14,19 +14,13 @@ import click
 from data_manager.loader import MovieLensLoader
 from data_manager.preprocessor import MovieLensPreprocessor
 from evaluation.evaluator import Evaluator
+from fuzzy.config_loader import load_fuzzy_system_config
 from fuzzy.defuzzification import Defuzzifier
-from fuzzy.fuzzification import Fuzzifier
+from fuzzy.fuzzifier import Fuzzifier
 from fuzzy.inference_engine import MamdaniInferenceEngine
-from fuzzy.linguistic_variables import build_default_v1_system_variables
-from fuzzy.rule_base import RuleBase
 from recommender.explanation_engine import ExplanationEngine
-from recommender.pipeline_factory import (
-    build_profile,
-    linguistic_level_to_value,
-    load_recommender_context,
-    parse_genre_preferences,
-)
-from recommender.user_profile import GenrePreference, UserProfile
+from recommender.pipeline_factory import build_profile, load_recommender_context, parse_genre_preferences
+from recommender.user_profile import GenrePreference, IntervalGenrePreference, LinguisticGenrePreference, UserProfile
 from visualization.membership_plots import MembershipPlotter
 
 
@@ -54,13 +48,21 @@ def main(ctx: click.Context, config_path: str, verbose: bool) -> None:
 @click.option("--explain", is_flag=True)
 @click.option("--set-genre", "set_genre", default=None, help='Preferences explicites, ex: "Sci-Fi=0.9,Action=0.7".')
 @click.option("--data-dir", type=click.Path(path_type=Path), default=Path("data/movie"), show_default=True)
-def recommend(user_id: int, top_n: int, explain: bool, set_genre: str | None, data_dir: Path) -> None:
+@click.pass_context
+def recommend(
+    ctx: click.Context,
+    user_id: int,
+    top_n: int,
+    explain: bool,
+    set_genre: str | None,
+    data_dir: Path,
+) -> None:
     """Produire les recommandations Top-N pour un utilisateur."""
 
     if top_n <= 0:
         raise click.ClickException("top-n doit etre strictement positif.")
 
-    context = load_recommender_context(data_dir)
+    context = load_recommender_context(data_dir, config_path=ctx.obj["config_path"])
     try:
         profile = build_profile(user_id=user_id, raw_data=context.raw_data, explicit_preferences=set_genre)
     except ValueError as exc:
@@ -111,57 +113,25 @@ def profile(user_id: int, show: bool, set_genre: str | None) -> None:
         click.echo("Aucune preference explicite enregistree dans cette commande.")
         return
     for preference in profile.genre_preferences.values():
-        click.echo(f"- {preference.genre}: {preference.value:.3f}")
-
-
-@main.command()
-@click.option("--user-id", type=int, required=True)
-@click.option("--genre", default=None)
-@click.option("--level", default=None)
-@click.option("--recency", default=None)
-@click.option("--popularity", default=None)
-def preferences(
-    user_id: int,
-    genre: str | None,
-    level: str | None,
-    recency: str | None,
-    popularity: str | None,
-) -> None:
-    """Convertir une preference linguistique en valeur crisp V1."""
-
-    if genre is None or level is None:
-        raise click.ClickException("--genre et --level sont requis pour la V1.")
-    try:
-        value = linguistic_level_to_value(level)
-    except ValueError as exc:
-        raise click.ClickException(str(exc)) from exc
-    click.echo(f"user_id={user_id} genre={genre} level={level} value={value:.3f}")
-    if recency is not None or popularity is not None:
-        click.echo("recency/popularity sont reserves a une extension future de profil.")
+        click.echo(f"- {preference.genre}: {_format_preference_value(preference.value)}")
 
 
 @main.command()
 @click.option("--metric", default="all", show_default=True)
+@click.option("--user-id", type=int, required=True)
 @click.option("--top-n", type=int, default=10, show_default=True)
 @click.option("--output", default=None)
-def evaluate(metric: str, top_n: int, output: str | None) -> None:
+@click.option("--data-dir", type=click.Path(path_type=Path), default=Path("data/movie"), show_default=True)
+@click.pass_context
+def evaluate(ctx: click.Context, metric: str, user_id: int, top_n: int, output: str | None, data_dir: Path) -> None:
     """Evaluer une liste de demonstration avec les metriques V1."""
 
-    context = load_recommender_context()
-    raw_data = context.raw_data
-    recommender = context.recommender
-    profile = build_profile(user_id=1, raw_data=raw_data, explicit_preferences=None)
-    recommendations = recommender.recommend(profile, top_n=top_n)
-    recommended_ids = [recommendation.movie.movie_id for recommendation in recommendations]
-    user_ratings = raw_data["ratings"].loc[raw_data["ratings"]["userId"] == 1]
-    relevant_ids = user_ratings.loc[user_ratings["rating"] >= 4.0, "movieId"].astype(int).tolist()
-    full_catalog = raw_data["movies"]["movieId"].astype(int).tolist()
-    genres_by_movie = {
-        movie.movie_id: set(movie.genre_list)
-        for movie in recommender.repository.movies
-        if movie.movie_id in recommended_ids
-    }
-    report = Evaluator(top_n=top_n).evaluate_lists(recommended_ids, relevant_ids, full_catalog, genres_by_movie)
+    context = load_recommender_context(data_dir, config_path=ctx.obj["config_path"])
+    report = Evaluator(top_n=top_n).evaluate_user(
+        user_id=user_id,
+        raw_data=context.raw_data,
+        recommender=context.recommender,
+    )
     if metric != "all" and metric not in report.metrics:
         raise click.ClickException(f"Metrique inconnue: {metric}. Choix: {sorted(report.metrics)}")
     selected_metrics = report.metrics if metric == "all" else {metric: report.metrics[metric]}
@@ -203,10 +173,12 @@ def dataset_stats(show_genres: bool, show_ratings_dist: bool) -> None:
 @main.command()
 @click.option("--variable", required=True)
 @click.option("--save", default=None)
-def visualize(variable: str, save: str | None) -> None:
+@click.pass_context
+def visualize(ctx: click.Context, variable: str, save: str | None) -> None:
     """Visualiser les fonctions d'appartenance d'une variable V1."""
 
-    variables = build_default_v1_system_variables()
+    fuzzy_config = load_fuzzy_system_config(ctx.obj["config_path"])
+    variables = {**fuzzy_config.input_variables, **fuzzy_config.output_variables}
     if variable not in variables:
         raise click.ClickException(f"Variable inconnue: {variable}. Choix: {sorted(variables)}")
     if save is None:
@@ -232,7 +204,9 @@ def gui_command() -> None:
 @click.option("--rating", type=float, required=True)
 @click.option("--popularity", type=float, required=True)
 @click.option("--explain", is_flag=True)
+@click.pass_context
 def infer_command(
+    ctx: click.Context,
     genre_pref: float,
     rating: float,
     popularity: float,
@@ -240,16 +214,20 @@ def infer_command(
 ) -> None:
     """Tester manuellement le pipeline flou V1 sur des valeurs crisp."""
 
-    fuzzifier = Fuzzifier.default_v1()
-    inference_engine = MamdaniInferenceEngine(RuleBase.load_minimal_v1())
-    defuzzifier = Defuzzifier()
+    fuzzy_config = load_fuzzy_system_config(ctx.obj["config_path"])
+    fuzzifier = Fuzzifier(fuzzy_config.input_variables)
+    inference_engine = MamdaniInferenceEngine(fuzzy_config.rule_base)
+    defuzzifier = Defuzzifier(method=fuzzy_config.defuzzification_method)
 
     fuzzy_inputs = fuzzifier.fuzzify_inputs(
         user_inputs={"genre_preference": genre_pref},
         movie_inputs={"average_rating": rating, "popularity": popularity},
     )
     inference = inference_engine.infer(fuzzy_inputs)
-    score = defuzzifier.defuzzify(dict(inference.output_memberships))
+    score = defuzzifier.defuzzify(
+        dict(inference.output_memberships),
+        variable=fuzzy_config.output_variables["recommendation_score"],
+    )
     inference.crisp_score = score
 
     click.echo(f"score={score:.4f}")
@@ -257,3 +235,13 @@ def infer_command(
     if explain:
         for activation in inference.activated_rules:
             click.echo(f"{activation.rule.identifier} degree={activation.degree:.4f} -> {activation.consequent_term}")
+
+
+def _format_preference_value(value: object) -> str:
+    if isinstance(value, float):
+        return f"{value:.3f}"
+    if isinstance(value, LinguisticGenrePreference):
+        return value.term
+    if isinstance(value, IntervalGenrePreference):
+        return f"{value.lower:.3f}..{value.upper:.3f}"
+    return str(value)

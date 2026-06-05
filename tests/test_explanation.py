@@ -2,9 +2,9 @@
 
 import pytest
 
-from data.movie_repository import MovieRepository
-from data.schemas import MovieFeatures
-from fuzzy.fuzzification import Fuzzifier
+from data_manager.movie_repository import MovieRepository
+from data_manager.schemas import MovieFeatures
+from fuzzy.fuzzifier import Fuzzifier
 from fuzzy.inference_engine import MamdaniInferenceEngine
 from fuzzy.rule_base import RuleBase
 from recommender.explanation_engine import ExplanationEngine

@@ -12,15 +12,21 @@ from pathlib import Path
 
 from pandas import DataFrame
 
-from data.movie_repository import MovieRepository
 from data_manager.loader import MovieLensLoader
+from data_manager.movie_repository import MovieRepository
 from data_manager.preprocessor import MovieLensPreprocessor
+from fuzzy.config_loader import load_fuzzy_system_config
 from fuzzy.defuzzification import Defuzzifier
-from fuzzy.fuzzification import Fuzzifier
+from fuzzy.fuzzifier import Fuzzifier
 from fuzzy.inference_engine import MamdaniInferenceEngine
-from fuzzy.rule_base import RuleBase
 from recommender.fuzzy_recommender import FuzzyRecommender
-from recommender.user_profile import GenrePreference, UserProfile
+from recommender.user_profile import (
+    GenrePreference,
+    GenrePreferenceValue,
+    IntervalGenrePreference,
+    LinguisticGenrePreference,
+    UserProfile,
+)
 
 
 @dataclass(frozen=True)
@@ -38,25 +44,33 @@ class RecommenderContext:
     recommender: FuzzyRecommender
 
 
-def load_recommender_context(raw_dir: Path | str = Path("data/movie")) -> RecommenderContext:
+def load_recommender_context(
+    raw_dir: Path | str = Path("data/movie"),
+    config_path: Path | str = Path("config/fuzzy_config.yaml"),
+) -> RecommenderContext:
     """Charger MovieLens et construire le pipeline V1 complet."""
 
     raw_data = MovieLensLoader(raw_dir=raw_dir).load_all()
     preprocessor = MovieLensPreprocessor()
     features = preprocessor.build_movie_features(raw_data)
-    recommender = build_recommender_from_features(features)
+    recommender = build_recommender_from_features(features, config_path=config_path)
     return RecommenderContext(raw_data=raw_data, features=features, recommender=recommender)
 
 
-def build_recommender_from_features(features: DataFrame) -> FuzzyRecommender:
+def build_recommender_from_features(
+    features: DataFrame,
+    config_path: Path | str = Path("config/fuzzy_config.yaml"),
+) -> FuzzyRecommender:
     """Assembler la facade de recommandation depuis les features films."""
 
+    fuzzy_config = load_fuzzy_system_config(config_path)
     repository = MovieRepository.from_dataframe(features)
     return FuzzyRecommender(
         repository=repository,
-        fuzzifier=Fuzzifier.default_v1(),
-        inference_engine=MamdaniInferenceEngine(RuleBase.load_minimal_v1()),
-        defuzzifier=Defuzzifier(),
+        fuzzifier=Fuzzifier(variables=fuzzy_config.input_variables),
+        inference_engine=MamdaniInferenceEngine(fuzzy_config.rule_base),
+        defuzzifier=Defuzzifier(method=fuzzy_config.defuzzification_method),
+        output_variable=fuzzy_config.output_variables["recommendation_score"],
     )
 
 
@@ -86,38 +100,40 @@ def build_profile(
         return profile
 
     merged = user_ratings.merge(movies[["movieId", "genres"]], on="movieId", how="left")
-    by_genre: dict[str, list[float]] = {}
+    by_genre: dict[str, list[tuple[float, float]]] = {}
     preprocessor = MovieLensPreprocessor()
     for row in merged.itertuples(index=False):
-        for genre in preprocessor.split_genres(row.genres):
-            by_genre.setdefault(genre, []).append(float(row.rating))
+        genres = preprocessor.split_genres(row.genres)
+        if not genres:
+            continue
+        weight = 1.0 / len(genres)
+        for genre in genres:
+            by_genre.setdefault(genre, []).append((float(row.rating), weight))
 
-    for genre, ratings_for_genre in by_genre.items():
-        average_rating = sum(ratings_for_genre) / len(ratings_for_genre)
+    for genre, weighted_ratings in by_genre.items():
+        total_weight = sum(weight for _, weight in weighted_ratings)
+        average_rating = sum(rating * weight for rating, weight in weighted_ratings) / total_weight
         value = max(0.0, min(1.0, (average_rating - 0.5) / 4.5))
         profile.set_genre_preference(GenrePreference(genre=genre, value=value))
     return profile
 
 
-def parse_genre_preferences(raw_preferences: str) -> dict[str, float]:
-    """Parser `Genre=valeur` separe par virgules."""
+def parse_genre_preferences(raw_preferences: str) -> dict[str, GenrePreferenceValue]:
+    """Parser `Genre=valeur`, `Genre=terme` ou `Genre=borne:borne`."""
 
-    preferences: dict[str, float] = {}
+    preferences: dict[str, GenrePreferenceValue] = {}
     for item in raw_preferences.split(","):
         stripped = item.strip()
         if not stripped:
             continue
         if "=" not in stripped:
-            raise ValueError(f"Preference invalide: {stripped}. Format attendu: Genre=0.8")
+            raise ValueError(f"Preference invalide: {stripped}. Format attendu: Genre=0.8 ou Genre=forte")
         genre, raw_value = stripped.split("=", 1)
         genre = genre.strip()
         if not genre:
             raise ValueError("Le genre ne peut pas etre vide.")
-        try:
-            value = float(raw_value)
-        except ValueError as exc:
-            raise ValueError(f"Valeur invalide pour {genre}: {raw_value}") from exc
-        if not 0.0 <= value <= 1.0:
+        value = _parse_preference_value(raw_value)
+        if isinstance(value, float) and not 0.0 <= value <= 1.0:
             raise ValueError(f"La preference de {genre} doit etre dans [0, 1].")
         preferences[genre] = value
     if not preferences:
@@ -125,20 +141,12 @@ def parse_genre_preferences(raw_preferences: str) -> dict[str, float]:
     return preferences
 
 
-def linguistic_level_to_value(level: str) -> float:
-    """Convertir un libelle linguistique courant en valeur crisp V1."""
-
-    levels = {
-        "pas_du_tout": 0.0,
-        "faible": 0.2,
-        "un_peu": 0.35,
-        "moyen": 0.5,
-        "moyenne": 0.5,
-        "beaucoup": 0.8,
-        "fort": 0.9,
-        "forte": 0.9,
-    }
-    normalised = level.casefold().replace(" ", "_").replace("-", "_")
-    if normalised not in levels:
-        raise ValueError(f"Niveau linguistique inconnu: {level}")
-    return levels[normalised]
+def _parse_preference_value(raw_value: str) -> GenrePreferenceValue:
+    value = raw_value.strip()
+    if ".." in value:
+        lower, upper = value.split("..", 1)
+        return IntervalGenrePreference(lower=float(lower), upper=float(upper))
+    try:
+        return float(value)
+    except ValueError:
+        return LinguisticGenrePreference(term=value.casefold().replace(" ", "_").replace("-", "_"))

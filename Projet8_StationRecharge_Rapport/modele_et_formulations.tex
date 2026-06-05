@@ -1,0 +1,326 @@
+\documentclass[11pt]{article}
+
+\usepackage[french]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=blue
+}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\linespread{1.08}
+
+\begin{document}
+
+\begin{center}
+{\Large\bfseries Du sujet 8 au modèle et aux formules}\\[4pt]
+{\large Station de recharge pour véhicules électriques}\\[8pt]
+{\normalsize Document explicatif séparé du rapport principal}\\[8pt]
+{\normalsize DUASENGE MAYANO -- Mai 2026}
+\end{center}
+
+\section*{Objectif du document}
+
+Ce document explique comment on passe de l'énoncé du projet 8 à la modélisation retenue dans le rapport, puis comment cette modélisation conduit aux formules mathématiques. Il précise aussi, pour chaque formule importante, les lignes du fichier \texttt{code/DUASENGE\_MAYANO\_PROJET8.gaml} où elle est utilisée.
+
+L'idée centrale est la suivante : ce projet ne se modélise pas naturellement comme un système d'équations différentielles ordinaires. Il se modélise mieux comme un \textbf{modèle multi-agent à états discrets}, couplé à une \textbf{file d'attente multi-serveurs hétérogène}. C'est cohérent avec les notes de cours sur les systèmes multi-agents et avec la littérature sur les stations de recharge, où l'on trouve des modèles de files d'attente, des modèles stochastiques et des simulations agent-based~\cite{farkas2018,kim2017,garcia2018,karlsson2023}.
+
+\section{Explication simple, niveau 16 ans}
+
+\subsection{Ce que demande l'énoncé}
+
+L'énoncé décrit une station de recharge avec des bornes et des véhicules. Les véhicules arrivent parfois seuls, parfois en groupe. Les bornes peuvent être libres, occupées, en panne ou en maintenance. Un véhicule peut être servi tout de suite, attendre, puis éventuellement abandonner si l'attente devient trop longue.
+
+On peut imaginer la station comme une petite salle d'attente :
+\begin{itemize}
+  \item les bornes sont les guichets ;
+  \item les véhicules sont les clients ;
+  \item la file d'attente est la queue devant les guichets ;
+  \item une panne ferme temporairement un guichet ;
+  \item un client peut partir s'il attend trop longtemps.
+\end{itemize}
+
+\subsection{Pourquoi ce n'est pas comme le modèle épidémique}
+
+Dans le travail \texttt{Brummel\_TPGAMA.pdf}, on suivait des groupes de personnes : les susceptibles, exposés, infectieux et guéris. On ne se préoccupait pas de chaque personne individuellement. On pouvait donc utiliser des équations différentielles pour dire comment les groupes changent en continu.
+
+Ici, l'ordre exact compte. Le premier véhicule arrivé peut passer avant les autres. Une borne précise peut tomber en panne. Un véhicule précis peut être urgent et abandonner. Ces détails individuels sont importants. Si on remplace tout par une équation différentielle globale, on perd une grande partie du comportement réel du système.
+
+\subsection{Le bon modèle pour notre cas}
+
+Le modèle retenu est donc :
+\[
+\text{agents individuels} + \text{états discrets} + \text{file d'attente} + \text{événements aléatoires}.
+\]
+
+Plus simplement :
+\begin{itemize}
+  \item chaque véhicule est un agent ;
+  \item chaque borne est aussi un agent ;
+  \item la station organise la file ;
+  \item les véhicules changent d'état : arrivée, attente, recharge, servi, abandon ;
+  \item les bornes changent d'état : libre, occupée, panne, maintenance ;
+  \item les formules servent à calculer les temps, l'énergie, les files et les indicateurs.
+\end{itemize}
+
+\subsection{À quoi servent les formules}
+
+Les formules ne remplacent pas les agents. Elles expliquent ce que les agents calculent :
+\begin{itemize}
+  \item combien de véhicules arrivent ;
+  \item combien d'énergie un véhicule doit recevoir ;
+  \item combien de temps dure une recharge ;
+  \item comment la batterie augmente ;
+  \item combien de temps un véhicule attend ;
+  \item quand un véhicule abandonne ;
+  \item comment calculer l'occupation, la file moyenne, l'abandon et la satisfaction.
+\end{itemize}
+
+\section{Explication technique pour un lecteur du domaine}
+
+\subsection{Nature du système}
+
+Le système est un service de recharge avec demande stochastique, capacité limitée, serveurs hétérogènes et comportements individuels. Les véhicules ont des attributs propres : état de charge, capacité, urgence, tolérance d'attente et préférence de puissance. Les bornes ont des puissances différentes et peuvent devenir indisponibles. L'environnement est donc dynamique, non déterministe et discret, ce qui correspond au cadre SMA étudié dans les notes de cours.
+
+Le formalisme retenu est un \textbf{modèle multi-agent à transitions d'états}, couplé à une \textbf{file d'attente multi-serveurs hétérogène}. Les serveurs sont les bornes ; l'hétérogénéité vient des puissances différentes ; la dynamique de service dépend à la fois de l'énergie demandée et du facteur réseau. Ce choix est cohérent avec les travaux sur les files d'attente MAP/G/c pour stations de recharge~\cite{farkas2018}, les modèles stochastiques avec arrivées variables~\cite{kim2017}, et les simulations agent-based des temps d'attente et de l'utilisation des chargeurs~\cite{garcia2018,karlsson2023}.
+
+\subsection{Chaîne de modélisation}
+
+Le passage de l'énoncé au modèle suit cinq décisions :
+
+\begin{enumerate}
+  \item \textbf{Identifier les entités.} L'énoncé parle de véhicules, de bornes et d'une station. Le code les traduit en espèces GAML : \texttt{vehicule}, \texttt{borne}, \texttt{station}.
+  \item \textbf{Définir les états.} Les véhicules ont cinq états et les bornes quatre états. Ces états remplacent l'idée d'un compartiment continu.
+  \item \textbf{Définir les événements.} Les événements sont : arrivée, arrivée groupée, connexion, mise en file, attribution d'une borne, panne, réparation, abandon, fin de recharge.
+  \item \textbf{Définir les règles de décision.} La station choisit un véhicule selon une politique de file ; le véhicule abandonne selon son attente et son urgence ; la borne calcule la recharge selon la puissance disponible.
+  \item \textbf{Définir les indicateurs.} Les indicateurs suivent la performance : occupation, file, attente, abandon, satisfaction.
+\end{enumerate}
+
+\section{Correspondance entre formules et code GAML}
+
+\begin{longtable}{L{0.25\textwidth} L{0.38\textwidth} L{0.26\textwidth}}
+\caption{Correspondance entre les formulations mathématiques et le code GAML.}\label{tab:formules-code}\\
+\toprule
+Élément modélisé & Formulation dans le rapport & Lignes du code GAML \\
+\midrule
+\endfirsthead
+\toprule
+Élément modélisé & Formulation dans le rapport & Lignes du code GAML \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+
+Capacité de la station &
+La station possède $B_{\mathrm{total}}=B_L+B_A+B_R$, avec 10 bornes lentes, 8 accélérées et 5 rapides. &
+Lignes 53--55 pour les nombres de bornes ; lignes 146--166 pour leur création. \\
+
+Puissances nominales &
+Chaque type de borne a une puissance $P_i$ : lente, accélérée ou rapide. &
+Lignes 46--48 pour les puissances 7, 22 et 50 kW. \\
+
+Heure simulée &
+$h(t)=((\mathrm{cycle}\times\Delta t)/1h)\bmod 24$. &
+Ligne 87. \\
+
+Arrivée fluctuante &
+\[
+\lambda(t)=\lambda_0\left(1+a\exp\left[-\frac{(h(t)-19)^2}{2\sigma^2}\right]\right).
+\]
+Elle représente le pic d'arrivée autour de 19 h. &
+Lignes 92--94 pour $\lambda_0$, $a$ et $\sigma$ ; lignes 181--182 pour la formule. \\
+
+Création d'un véhicule &
+\[
+p_{\mathrm{arr}}(t)=\min\left(1,\lambda(t)\frac{\Delta t}{1h}\right).
+\]
+Si le tirage aléatoire réussit, un véhicule est créé. &
+Lignes 184--190. \\
+
+Arrivée groupée &
+Avec la probabilité $p_{\mathrm{burst}}$, le modèle crée $n_{\mathrm{burst}}$ véhicules supplémentaires. &
+Lignes 68--69 pour les paramètres ; lignes 193--199 pour la création groupée. \\
+
+Déficit de batterie &
+\[
+\Delta b_v=b_v^{\mathrm{cible}}-b_v.
+\]
+Il mesure la part de batterie à remplir. &
+Ligne 474. \\
+
+Énergie à fournir &
+\[
+E_v=\frac{\Delta b_v}{100}C_v.
+\]
+La capacité $C_v$ convertit un pourcentage en kWh. &
+Ligne 475. \\
+
+Puissance effective &
+\[
+P_i^{\mathrm{eff}}=P_i f_{\mathrm{res}}.
+\]
+Le facteur réseau réduit éventuellement la puissance nominale. &
+Ligne 476 au début de la recharge ; ligne 503 pendant la mise à jour de batterie. \\
+
+Durée de recharge &
+\[
+T_v=\frac{E_v}{P_i^{\mathrm{eff}}}.
+\]
+Le temps est plus court si la puissance effective est grande. &
+Lignes 478--481. \\
+
+Temps restant &
+\[
+T_v(t+\Delta t)=T_v(t)-\Delta t\, f_{\mathrm{res}}.
+\]
+Le code décrémente le temps de recharge restant à chaque pas. &
+Lignes 497--500. \\
+
+Énergie fournie à un pas &
+\[
+\Delta E_v=P_i^{\mathrm{eff}}\frac{\Delta t}{1h}.
+\]
+Elle dépend de la puissance effective et du pas de temps. &
+Ligne 505. \\
+
+Mise à jour de batterie &
+\[
+b_v(t+\Delta t)=\min\left(100,\ b_v(t)+100\frac{\Delta E_v}{C_v}\right).
+\]
+Le niveau de batterie ne dépasse pas 100\%. &
+Lignes 506--507. \\
+
+Fin de recharge &
+La recharge se termine si $b_v\geq b_v^{\mathrm{cible}}$ ou si $T_v\leq 0$. &
+Lignes 511--518. \\
+
+Estimation de l'attente &
+\[
+\widehat{W}(t)=\frac{Q(t)}{B_{\mathrm{act}}(t)}\times 30\ \mathrm{minutes}.
+\]
+Cette estimation sert à décider si l'attente est acceptable. &
+Lignes 381--386 pour les bornes actives ; lignes 388--399 pour la file et le temps moyen ; lignes 401--404 pour l'estimation. \\
+
+Abandon par attente estimée &
+Si $\widehat{W}(t)>W_v^{\max}$, le véhicule abandonne. &
+Lignes 653--666. \\
+
+Abandon par attente réelle &
+Si $W_v(t)>W_v^{\max}$, le véhicule abandonne. &
+Lignes 669--672. \\
+
+Abandon par urgence &
+Si $u_v>0.85$ et $W_v(t)>W_v^{\max}/2$, le véhicule abandonne. &
+Lignes 674--678 ; le seuil est déclaré ligne 600. \\
+
+Taux d'occupation instantané &
+\[
+\tau_{\mathrm{occ}}(t)=\frac{B_{\mathrm{occ}}(t)}{B_{\mathrm{total}}}.
+\]
+Il mesure la part des bornes occupées. &
+Lignes 410--418. \\
+
+Taux d'occupation moyen &
+\[
+\overline{\tau}_{\mathrm{occ}}=\frac{1}{n}\sum_{k=1}^{n}\tau_{\mathrm{occ}}(k).
+\]
+Le code accumule les observations, puis calcule la moyenne. &
+Lignes 121--122 pour la moyenne ; lignes 213--218 pour l'accumulation. \\
+
+Taille de file instantanée &
+$Q(t)$ est le nombre de véhicules en attente dans la file unique ou dans les files par type. &
+Lignes 421--429. \\
+
+Taille de file moyenne &
+\[
+\overline{Q}=\frac{1}{n}\sum_{k=1}^{n}Q(k).
+\]
+Le code accumule les tailles observées puis calcule la moyenne. &
+Lignes 133--134 pour la moyenne ; lignes 219--222 pour l'accumulation. \\
+
+Temps d'attente moyen &
+\[
+\overline{W}=\frac{\sum W_v}{N_W}.
+\]
+Il est calculé sur les véhicules servis. &
+Lignes 124--125 pour la moyenne ; lignes 698--701 pour l'accumulation. \\
+
+Taux d'abandon &
+\[
+T_{\mathrm{abandon}}=\frac{N_{\mathrm{abandons}}}{N_{\mathrm{arrivees}}}.
+\]
+Il compare les abandons au nombre total d'arrivées. &
+Lignes 127--128 pour le taux ; lignes 190 et 199 pour les arrivées ; ligne 688 pour les abandons. \\
+
+Satisfaction individuelle &
+\[
+S_v=\max\left(0,1-\frac{W_v}{W_v^{\max}}\right)\beta_v.
+\]
+Le bonus $\beta_v$ vaut 1 si la préférence de puissance est respectée, sinon 0.7. &
+Lignes 703--707. \\
+
+Satisfaction globale &
+\[
+\overline{S}=\frac{\sum S_v}{N_S}.
+\]
+Les abandons ajoutent une satisfaction nulle ; les véhicules servis ajoutent leur satisfaction calculée. &
+Lignes 130--131 pour la moyenne ; lignes 688--690 pour les abandons ; lignes 709--711 pour les véhicules servis. \\
+
+\end{longtable}
+
+\section{Pourquoi ces formules sont cohérentes avec le code}
+
+Toutes les formules du rapport correspondent à des calculs effectivement présents dans le code. Le rapport n'invente pas un système d'EDO qui n'existe pas dans le GAML. Il formalise les règles déjà codées :
+\begin{itemize}
+  \item les arrivées suivent une probabilité dépendant de l'heure simulée ;
+  \item la recharge dépend de l'énergie manquante et de la puissance disponible ;
+  \item l'attente dépend de la taille de la file et des bornes disponibles ;
+  \item l'abandon dépend de la tolérance, de l'estimation et de l'urgence ;
+  \item les indicateurs sont des ratios ou des moyennes calculés par accumulation.
+\end{itemize}
+
+Le mot important est donc \textbf{formulation discrète}. Les formules ne disent pas que le système évolue continûment comme une épidémie ; elles disent comment le simulateur met à jour ses agents à chaque cycle.
+
+\section{Sources}
+
+\begin{thebibliography}{9}
+
+\bibitem{farkas2018}
+Farkas, C., \& Telek, M. (2018).
+Capacity Planning of Electric Car Charging Station Based on Discrete Time Observations and MAP(2)/G/c Queue.
+\emph{Periodica Polytechnica Electrical Engineering and Computer Science}, 62(3), 82--89.
+\url{https://doi.org/10.3311/PPee.11841}.
+
+\bibitem{kim2017}
+Kim, J., Son, S.-Y., Lee, J.-M., \& Ha, H.-T. (2017).
+Scheduling and performance analysis under a stochastic model for electric vehicle charging stations.
+\emph{Omega}, 66, 278--289.
+\url{https://doi.org/10.1016/j.omega.2015.11.010}.
+
+\bibitem{garcia2018}
+García-Magariño, I., Palacios-Navarro, G., Lacuesta, R., \& Lloret, J. (2018).
+ABSCEV: An agent-based simulation framework about smart transportation for reducing waiting times in charging electric vehicles.
+\emph{Computer Networks}, 138, 119--135.
+\url{https://doi.org/10.1016/j.comnet.2018.03.014}.
+
+\bibitem{karlsson2023}
+Karlsson, J., \& Grauers, A. (2023).
+Agent-Based Investigation of Charger Queues and Utilization of Public Chargers for Electric Long-Haul Trucks.
+\emph{Energies}, 16(12), 4704.
+\url{https://doi.org/10.3390/en16124704}.
+
+\end{thebibliography}
+
+\end{document}

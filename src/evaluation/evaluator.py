@@ -4,8 +4,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from collections.abc import Iterable
+from typing import TYPE_CHECKING
+
+from pandas import DataFrame
 
 from .metrics import coverage, diversity_score, precision_at_n, recall_at_n
+
+if TYPE_CHECKING:
+    from recommender.fuzzy_recommender import FuzzyRecommender
 
 
 @dataclass
@@ -55,6 +61,62 @@ class Evaluator:
         )
         if not relevant_list:
             report.notes.append("Aucun film pertinent fourni ; le rappel vaut 0.0 par convention.")
+        return report
+
+    def evaluate_user(
+        self,
+        *,
+        user_id: int,
+        raw_data: dict[str, DataFrame],
+        recommender: FuzzyRecommender,
+        test_ratio: float = 0.2,
+        relevance_threshold: float = 4.0,
+    ) -> EvaluationReport:
+        """Evaluer un utilisateur avec decoupage temporel train/test.
+
+        Les notes de l'utilisateur sont triees par `timestamp`. Les premieres
+        notes construisent le profil, les plus recentes forment la verite-terrain.
+        """
+
+        if not 0.0 < test_ratio < 1.0:
+            raise ValueError("test_ratio doit appartenir a ]0, 1[.")
+        ratings = raw_data["ratings"]
+        user_ratings = ratings.loc[ratings["userId"] == user_id].sort_values("timestamp")
+        if len(user_ratings) < 2:
+            return EvaluationReport(notes=["Evaluation impossible: moins de deux notes pour cet utilisateur."])
+
+        test_size = max(1, int(round(len(user_ratings) * test_ratio)))
+        train_user_ratings = user_ratings.iloc[:-test_size]
+        test_user_ratings = user_ratings.iloc[-test_size:]
+        if train_user_ratings.empty:
+            train_user_ratings = user_ratings.iloc[:1]
+            test_user_ratings = user_ratings.iloc[1:]
+
+        train_ratings = ratings.loc[ratings["userId"] != user_id]
+        train_ratings = DataFrame([*train_ratings.to_dict("records"), *train_user_ratings.to_dict("records")])
+        from data_manager.preprocessor import MovieLensPreprocessor
+        from recommender.pipeline_factory import build_profile, build_recommender_from_features
+
+        train_raw_data = {**raw_data, "ratings": train_ratings}
+        profile = build_profile(user_id=user_id, raw_data=train_raw_data)
+        train_features = MovieLensPreprocessor().build_movie_features(train_raw_data)
+        train_recommender = build_recommender_from_features(train_features)
+        recommendations = train_recommender.recommend(profile, top_n=self.top_n)
+        recommended_ids = [recommendation.movie.movie_id for recommendation in recommendations]
+        relevant_ids = test_user_ratings.loc[
+            test_user_ratings["rating"] >= relevance_threshold,
+            "movieId",
+        ].astype(int).tolist()
+        full_catalog = raw_data["movies"]["movieId"].astype(int).tolist()
+        genres_by_movie = {
+            movie.movie_id: set(movie.genre_list)
+            for movie in train_recommender.repository.movies
+            if movie.movie_id in recommended_ids
+        }
+        report = self.evaluate_lists(recommended_ids, relevant_ids, full_catalog, genres_by_movie)
+        report.notes.append(
+            f"Decoupage temporel user_id={user_id}: train={len(train_user_ratings)}, test={len(test_user_ratings)}."
+        )
         return report
 
     def evaluate(self) -> EvaluationReport:

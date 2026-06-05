@@ -23,7 +23,7 @@ Les decisions V1 imposent :
 
 - dataset MovieLens Latest Small ;
 - donnees brutes immuables dans `data/movie/` ;
-- donnees derivees dans `data/processed/` ;
+- donnees derivees calculees en memoire par `MovieLensPreprocessor` ;
 - moteur flou developpe from scratch ;
 - aucune bibliotheque floue externe dans le coeur du systeme ;
 - variables linguistiques V1 : preference de genre, note moyenne, popularite ;
@@ -46,9 +46,8 @@ Les fondations etaient coherentes et operationnelles :
 - `src/fuzzy/fuzzifier.py` transforme les valeurs numeriques en degres
   d'appartenance ;
 - `src/visualization/membership_plots.py` produit des figures matplotlib ;
-- les modules `src/data`, `src/fuzzy/fuzzification.py`,
-  `src/fuzzy/linguistic_vars.py` et `src/fuzzy/membership.py` sont des modules
-  de compatibilite normaux.
+- `src/data_manager` est la couche officielle de chargement, schemas et acces
+  repository.
 
 Les modules encore volontairement incomplets etaient :
 
@@ -72,7 +71,7 @@ python -m compileall -q src tests main.py
 
 Resultats :
 
-- tests : 30 passed ;
+- tests de reference actuels : 77 passed ;
 - compilation : OK ;
 - imports centraux : OK ;
 - dataset reel : 9 742 films, 100 836 notes, 3 683 tags, 9 742 liens ;
@@ -113,7 +112,7 @@ python -m pytest -q -p no:cacheprovider
 Resultats :
 
 - compilation : OK ;
-- tests : 40 passed ;
+- tests de reference actuels : 77 passed ;
 - imports de `RuleBase`, `RuleValidationError` et des variables systeme : OK ;
 - `RuleBase.load_minimal_v1()` retourne exactement 8 regles ;
 - `build_default_v1_system_variables()` expose les entrees V1 et
@@ -127,7 +126,28 @@ Resultats :
   encore activees numeriquement.
 - La defuzzification et l'explication finale restent a brancher.
 
+## Mise a jour 2026-06-05
+
+Les commentaires de revue ont ete integres :
+
+- preferences linguistiques et intervalles conserves jusqu'a la fuzzification ;
+- chargeur YAML effectif pour `config/fuzzy_config.yaml` ;
+- evaluation CLI avec `--user-id` et decoupage temporel train/test ;
+- namespace `src/data` supprime au profit de `src/data_manager` ;
+- defuzzification vectorisee avec surfaces pre-calculees ;
+- pre-filtrage sans retour automatique au catalogue complet ;
+- valeur neutre `3.5` pour `average_rating` manquant.
+
+Verification finale :
+
+```bash
+./.venv/bin/pytest -q
+```
+
+Resultat : `77 passed in 2.51s`.
+
 ## Conclusion
 
-L'architecture reste saine. Les fondations et la base de regles V1 forment
-maintenant une base credible pour passer a l'inference Mamdani.
+L'architecture est maintenant alignee avec l'Architecture B et avec le sujet :
+les preferences imprecises sont representees comme objets flous ou intervalles,
+pas uniquement comme valeurs crisp.

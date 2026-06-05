@@ -2,8 +2,8 @@
 
 import pandas as pd
 
-from data.movie_repository import MovieRepository
-from data.schemas import MovieFeatures
+from data_manager.movie_repository import MovieRepository
+from data_manager.schemas import MovieFeatures
 
 
 def test_movie_repository_indexes_and_filters_by_genres() -> None:

@@ -45,7 +45,7 @@ def test_recommend_command_outputs_top_n_and_explanations(tmp_path: Path) -> Non
             "--top-n",
             "1",
             "--set-genre",
-            "Sci-Fi=0.9,Action=0.9",
+            "Sci-Fi=forte,Action=forte",
             "--data-dir",
             str(tmp_path),
             "--explain",
@@ -62,11 +62,25 @@ def test_recommend_command_outputs_top_n_and_explanations(tmp_path: Path) -> Non
 def test_profile_command_parses_explicit_genres() -> None:
     """La commande profile affiche les preferences explicites."""
 
-    result = CliRunner().invoke(main, ["profile", "--user-id", "7", "--set-genre", "Drama=0.8", "--show"])
+    result = CliRunner().invoke(main, ["profile", "--user-id", "7", "--set-genre", "Drama=forte", "--show"])
 
     assert result.exit_code == 0
     assert "Profil utilisateur 7" in result.output
-    assert "Drama: 0.800" in result.output
+    assert "Drama: forte" in result.output
+
+
+def test_evaluate_command_uses_requested_user(tmp_path: Path) -> None:
+    """La commande evaluate accepte un user_id explicite."""
+
+    _write_cli_movielens_dataset(tmp_path)
+
+    result = CliRunner().invoke(
+        main,
+        ["evaluate", "--user-id", "1", "--top-n", "1", "--data-dir", str(tmp_path)],
+    )
+
+    assert result.exit_code == 0
+    assert "precision_at_n=" in result.output
 
 
 def _write_cli_movielens_dataset(directory: Path) -> None:

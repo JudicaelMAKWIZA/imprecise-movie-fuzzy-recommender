@@ -12,7 +12,7 @@ visualisation.
 
 - Documentation lue : plan V1, decisions architecturales, README, README du
   rapport.
-- Tests avant modification : 30 passed.
+- Tests de reference actuels : 77 passed avec `./.venv/bin/pytest -q`.
 - Compilation Python : OK.
 - Imports centraux : OK.
 - Dataset MovieLens reel charge avec succes.
@@ -36,7 +36,7 @@ decisions architecturales : base de regles V1.
 ### Verification finale
 
 - Compilation Python : OK.
-- Tests apres implementation : 40 passed.
+- Tests de reference actuels : 77 passed avec `./.venv/bin/pytest -q`.
 - Base de regles chargee : 8 regles.
 - Sortie systeme disponible : `recommendation_score`.
 
@@ -70,7 +70,7 @@ Mamdani.
 ### Verification finale
 
 - Compilation Python : OK.
-- Tests apres implementation : 47 passed.
+- Tests de reference actuels : 77 passed avec `./.venv/bin/pytest -q`.
 - Aucune bibliotheque floue externe ajoutee.
 
 ### Prochaine etape
@@ -89,7 +89,7 @@ Il manquait la defuzzification, le scoring final, le pre-filtrage et le Top-N.
 
 - Documentation prioritaire relue : plan V1, decisions architecturales, audit,
   journal et schema Mamdani.
-- Tests avant modification : 47 passed.
+- Tests de reference actuels : 77 passed avec `./.venv/bin/pytest -q`.
 - Compilation Python : OK.
 - Aucune bibliotheque floue externe detectee.
 - Dette identifiee : `Defuzzifier`, `MovieRepository`, `UserProfile`,
@@ -115,7 +115,7 @@ Il manquait la defuzzification, le scoring final, le pre-filtrage et le Top-N.
 ### Verification finale
 
 - Compilation Python : OK.
-- Tests apres implementation : 62 passed.
+- Tests de reference actuels : 77 passed avec `./.venv/bin/pytest -q`.
 - Scenario de demonstration : Top-2 produit `Interstellar (2014)` puis
   `Weak Sci-Fi`.
 - Score maximal observe dans le scenario : 0.9074.
@@ -124,6 +124,26 @@ Il manquait la defuzzification, le scoring final, le pre-filtrage et le Top-N.
 ### Limites connues
 
 - La base de regles V1 reste minimale et ne couvre pas toutes les combinaisons.
-- Le profil utilisateur n'est pas encore appris depuis les historiques.
-- La CLI Top-N complete n'est pas encore branchee aux donnees et profils reels.
-- Le moteur d'explications textuelles reste a implementer.
+- Les preferences portent encore seulement sur les genres.
+
+## 2026-06-05 - Corrections apres revue
+
+### Travail realise
+
+- Ajout des preferences linguistiques (`Sci-Fi=forte`) et intervalles
+  (`Sci-Fi=0.6..0.9`) sans conversion crisp artificielle.
+- Ajout de `src/fuzzy/config_loader.py` pour construire variables et regles
+  depuis `config/fuzzy_config.yaml`.
+- Refactorisation de `evaluate` avec `--user-id` et decoupage temporel 80/20.
+- Deplacement de `MovieRepository` et des schemas vers `data_manager`.
+- Suppression des shims `src/data`, `fuzzy/fuzzification.py` et
+  `fuzzy/linguistic_vars.py`.
+- Defuzzification vectorisee avec surfaces de sortie pre-calculees.
+- Pre-filtrage strict : aucun genre au-dessus du seuil donne zero candidat.
+- Note moyenne manquante traitee par la valeur neutre `3.5`.
+- Profil derive avec ponderation `1 / nombre_de_genres`.
+
+### Verification finale
+
+- Tests : `77 passed in 2.51s` avec `./.venv/bin/pytest -q`.
+- Benchmark scoring : 9 742 films en `1.1532 s`.

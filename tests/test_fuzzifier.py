@@ -35,3 +35,27 @@ def test_fuzzifier_rejects_unknown_variable_for_direct_call() -> None:
 
     with pytest.raises(KeyError):
         fuzzifier.fuzzify_value("unknown", 1.0)
+
+
+def test_linguistic_term_keeps_overlap_with_neighbouring_terms() -> None:
+    """Un terme linguistique ne doit pas etre reduit a un vecteur one-hot."""
+
+    fuzzifier = Fuzzifier.default_v1()
+    degrees = fuzzifier.fuzzify_imprecise_value("genre_preference", "forte")
+
+    assert degrees["forte"] == pytest.approx(1.0)
+    assert degrees["moyenne"] > 0.0
+    assert degrees["faible"] == pytest.approx(0.0)
+
+
+def test_linguistic_term_aliases_are_variable_scoped_and_validated() -> None:
+    """Les alias acceptes sont explicites et les termes inconnus sont rejetes."""
+
+    fuzzifier = Fuzzifier.default_v1()
+
+    alias_degrees = fuzzifier.fuzzify_imprecise_value("genre_preference", "fort")
+
+    assert alias_degrees["forte"] == pytest.approx(1.0)
+    assert alias_degrees["moyenne"] > 0.0
+    with pytest.raises(ValueError, match="Termes valides: faible, moyenne, forte"):
+        fuzzifier.fuzzify_imprecise_value("genre_preference", "fortee")

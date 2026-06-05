@@ -1,6 +1,7 @@
 """Coeur scientifique flou du projet."""
 
 from .aggregation import ConsequentAggregator
+from .config_loader import FuzzySystemConfig, load_fuzzy_system_config
 from .defuzzification import Defuzzifier
 from .fuzzifier import Fuzzifier
 from .fuzzy_set import FuzzySet
@@ -31,6 +32,7 @@ __all__ = [
     "Fuzzifier",
     "FuzzySet",
     "FuzzyRule",
+    "FuzzySystemConfig",
     "FuzzyAntecedent",
     "FuzzyConsequent",
     "InferenceResult",
@@ -49,6 +51,7 @@ __all__ = [
     "build_genre_preference_variable",
     "build_popularity_variable",
     "build_recommendation_score_variable",
+    "load_fuzzy_system_config",
     "trapezoidal",
     "triangular",
 ]
