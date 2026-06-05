@@ -13,6 +13,10 @@ utilisateur vers une valeur crisp unique.
 - `Sci-Fi=forte` : preference linguistique conservee comme terme flou.
 - `Sci-Fi=0.6..0.9` : preference intervalle.
 
+Dans la GUI, le mode `intervalle` expose deux curseurs : la valeur principale
+sert de borne basse et le second curseur sert de borne haute. Les bornes sont
+normalisees dans `[0, 1]` et ordonnees avant d'etre transmises au profil.
+
 ## Passage vers le FIS
 
 `UserProfile.genre_preference_for_movie` retourne un objet type qui indique si

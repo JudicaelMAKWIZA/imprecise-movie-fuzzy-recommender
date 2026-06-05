@@ -8,6 +8,9 @@ from typing import TYPE_CHECKING
 
 from pandas import DataFrame
 
+from data_manager.movie_repository import MovieRepository
+from data_manager.preprocessor import MovieLensPreprocessor
+
 from .metrics import coverage, diversity_score, precision_at_n, recall_at_n
 
 if TYPE_CHECKING:
@@ -96,9 +99,12 @@ class Evaluator:
         from recommender.pipeline_factory import build_profile
 
         train_raw_data = {**raw_data, "ratings": train_ratings}
+        train_features = MovieLensPreprocessor().build_movie_features(train_raw_data)
+        train_repository = MovieRepository.from_dataframe(train_features)
+        train_recommender = recommender.with_repository(train_repository)
         profile = build_profile(user_id=user_id, raw_data=train_raw_data)
         try:
-            recommendations = recommender.recommend(profile, top_n=self.top_n)
+            recommendations = train_recommender.recommend(profile, top_n=self.top_n)
         except PrefilterEmptyError as exc:
             report = EvaluationReport(notes=[str(exc)])
             report.metrics = {
@@ -116,7 +122,7 @@ class Evaluator:
         full_catalog = raw_data["movies"]["movieId"].astype(int).tolist()
         genres_by_movie = {
             movie.movie_id: set(movie.genre_list)
-            for movie in recommender.repository.movies
+            for movie in train_recommender.repository.movies
             if movie.movie_id in recommended_ids
         }
         report = self.evaluate_lists(recommended_ids, relevant_ids, full_catalog, genres_by_movie)

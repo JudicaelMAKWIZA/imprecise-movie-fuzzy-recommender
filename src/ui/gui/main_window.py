@@ -198,9 +198,9 @@ class MainWindow:
         self._membership_tab.rowconfigure(0, weight=1)
         self._membership_tab.columnconfigure(0, weight=1)
 
-    def _on_preference_changed(self, variable_name: str, value: float) -> None:
+    def _on_preference_changed(self, genre: str, value: float) -> None:
         if self.membership_view is not None:
-            self.membership_view.update_highlight(variable_name, value)
+            self.membership_view.update_highlight("genre_preference", value, label=genre)
 
     @staticmethod
     def _value(variable: tk.StringVar | None, default: str) -> str:

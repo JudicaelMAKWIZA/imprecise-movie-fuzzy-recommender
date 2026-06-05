@@ -14,7 +14,7 @@ from fuzzy.fuzzifier import Fuzzifier
 from fuzzy.inference_engine import MamdaniInferenceEngine
 from fuzzy.rule_base import RuleBase
 from recommender.fuzzy_recommender import FuzzyRecommender, Recommendation
-from recommender.user_profile import LinguisticGenrePreference
+from recommender.user_profile import IntervalGenrePreference, LinguisticGenrePreference
 from test_cli import _write_cli_movielens_dataset
 from ui.gui.main_window import MainWindow
 from ui.gui.membership_view import MembershipView
@@ -56,6 +56,28 @@ def test_preferences_editor_returns_preference_dict() -> None:
         assert preferences["Action"].term == "moyenne"
         assert isinstance(preferences["Drama"], LinguisticGenrePreference)
         assert preferences["Drama"].term == "forte"
+    finally:
+        root.destroy()
+
+
+def test_preferences_editor_interval_mode_uses_custom_upper_bound() -> None:
+    """Le mode intervalle utilise la borne haute reglee par l'utilisateur."""
+
+    root = _tk_root()
+    try:
+        editor = PreferencesEditor(root)
+        editor.render()
+        editor.set_genres(["Drama"])
+        editor.value_vars["Drama"].set(0.25)
+        editor.upper_vars["Drama"].set(0.75)
+        editor.mode_vars["Drama"].set("intervalle")
+        editor._on_mode_changed("Drama")
+
+        preferences = editor.get_preferences()
+
+        assert isinstance(preferences["Drama"], IntervalGenrePreference)
+        assert preferences["Drama"].lower == pytest.approx(0.25)
+        assert preferences["Drama"].upper == pytest.approx(0.75)
     finally:
         root.destroy()
 
@@ -109,9 +131,44 @@ def test_membership_view_creates_figures() -> None:
         }
         view = MembershipView(root, variables)
         view.render()
+        canvas_id = id(view.canvases["genre_preference"])
 
         assert "genre_preference" in view.figures
         assert "recommendation_score" in view.figures
+        view.update_highlight("genre_preference", 0.2, label="Action")
+        view.update_highlight("genre_preference", 0.7, label="Action")
+        view.update_highlight("genre_preference", 0.8, label="Drama")
+        assert id(view.canvases["genre_preference"]) == canvas_id
+        assert view.highlight_values[("genre_preference", "Action")] == pytest.approx(0.7)
+        assert view.highlight_values[("genre_preference", "Drama")] == pytest.approx(0.8)
+    finally:
+        root.destroy()
+
+
+def test_preferences_editor_highlights_each_changed_genre() -> None:
+    """Deux sliders de genres produisent deux lignes de surlignage distinctes."""
+
+    root = _tk_root()
+    try:
+        recommender = _build_gui_recommender()
+        variables = {
+            **recommender.fuzzifier.variables,
+            "recommendation_score": recommender.output_variable,
+        }
+        view = MembershipView(root, variables)
+        view.render()
+        editor = PreferencesEditor(
+            root,
+            on_change=lambda genre, value: view.update_highlight("genre_preference", value, label=genre),
+        )
+        editor.render()
+        editor.set_genres(["Action", "Drama"])
+
+        editor._on_scale_changed("Action", "0.3")
+        editor._on_scale_changed("Drama", "0.8")
+
+        assert view.highlight_values[("genre_preference", "Action")] == pytest.approx(0.3)
+        assert view.highlight_values[("genre_preference", "Drama")] == pytest.approx(0.8)
     finally:
         root.destroy()
 

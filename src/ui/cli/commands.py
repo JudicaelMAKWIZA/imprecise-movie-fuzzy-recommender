@@ -50,7 +50,7 @@ def main(ctx: click.Context, config_path: str, verbose: bool, data_dir: Path) ->
 @click.option("--top-n", type=int, default=10, show_default=True)
 @click.option("--explain", is_flag=True)
 @click.option("--set-genre", "set_genre", default=None, help='Preferences explicites, ex: "Sci-Fi=forte,Action=moyenne".')
-@click.option("--data-dir", type=click.Path(path_type=Path), default=Path("data/movie"), show_default=True)
+@click.option("--data-dir", type=click.Path(path_type=Path), default=None)
 @click.pass_context
 def recommend(
     ctx: click.Context,
@@ -58,7 +58,7 @@ def recommend(
     top_n: int,
     explain: bool,
     set_genre: str | None,
-    data_dir: Path,
+    data_dir: Path | None,
 ) -> None:
     """Produire les recommandations Top-N pour un utilisateur."""
 
@@ -127,9 +127,9 @@ def profile(user_id: int, show: bool, set_genre: str | None) -> None:
 @click.option("--user-id", type=int, required=True)
 @click.option("--top-n", type=int, default=10, show_default=True)
 @click.option("--output", default=None)
-@click.option("--data-dir", type=click.Path(path_type=Path), default=Path("data/movie"), show_default=True)
+@click.option("--data-dir", type=click.Path(path_type=Path), default=None)
 @click.pass_context
-def evaluate(ctx: click.Context, metric: str, user_id: int, top_n: int, output: str | None, data_dir: Path) -> None:
+def evaluate(ctx: click.Context, metric: str, user_id: int, top_n: int, output: str | None, data_dir: Path | None) -> None:
     """Evaluer une liste de demonstration avec les metriques V1."""
 
     context = load_recommender_context(_resolve_data_dir(ctx, data_dir), config_path=ctx.obj["config_path"])

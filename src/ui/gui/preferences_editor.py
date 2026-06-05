@@ -33,8 +33,10 @@ class PreferencesEditor:
         self.canvas: tk.Canvas | None = None
         self.scrollable_frame: ttk.Frame | None = None
         self.value_vars: dict[str, tk.DoubleVar] = {}
+        self.upper_vars: dict[str, tk.DoubleVar] = {}
         self.label_vars: dict[str, tk.StringVar] = {}
         self.mode_vars: dict[str, tk.StringVar] = {}
+        self.upper_scales: dict[str, ttk.Scale] = {}
         self.touched_genres: set[str] = set(self.default_preferences)
         self._rendered = False
 
@@ -75,17 +77,21 @@ class PreferencesEditor:
         for child in self.scrollable_frame.winfo_children():
             child.destroy()
         self.value_vars.clear()
+        self.upper_vars.clear()
         self.label_vars.clear()
         self.mode_vars.clear()
+        self.upper_scales.clear()
 
         all_genres = sorted(set(genres).union(self.default_preferences))
         for row, genre in enumerate(all_genres):
             default_term = self.default_preferences.get(genre)
             initial_value = TERM_TO_VALUE.get(default_term or "", 0.0)
             value_var = tk.DoubleVar(value=initial_value)
+            upper_var = tk.DoubleVar(value=min(1.0, initial_value + 0.2))
             label_var = tk.StringVar(value=self._dominant_label(initial_value))
             mode_var = tk.StringVar(value="linguistique")
             self.value_vars[genre] = value_var
+            self.upper_vars[genre] = upper_var
             self.label_vars[genre] = label_var
             self.mode_vars[genre] = mode_var
 
@@ -100,6 +106,17 @@ class PreferencesEditor:
             )
             scale.grid(row=row, column=1, sticky="ew", padx=(0, 8))
             ttk.Label(self.scrollable_frame, textvariable=label_var, width=12).grid(row=row, column=2, sticky="w")
+            upper_scale = ttk.Scale(
+                self.scrollable_frame,
+                from_=0.0,
+                to=1.0,
+                orient="horizontal",
+                variable=upper_var,
+                command=lambda _raw, selected=genre: self._on_interval_changed(selected),
+            )
+            upper_scale.grid(row=row, column=3, sticky="ew", padx=(0, 8))
+            upper_scale.grid_remove()
+            self.upper_scales[genre] = upper_scale
             mode = ttk.Combobox(
                 self.scrollable_frame,
                 textvariable=mode_var,
@@ -107,8 +124,10 @@ class PreferencesEditor:
                 width=12,
                 state="readonly",
             )
-            mode.grid(row=row, column=3, sticky="e")
+            mode.grid(row=row, column=4, sticky="e")
+            mode.bind("<<ComboboxSelected>>", lambda _event, selected=genre: self._on_mode_changed(selected))
         self.scrollable_frame.columnconfigure(1, weight=1)
+        self.scrollable_frame.columnconfigure(3, weight=1)
 
     def get_preferences(self) -> dict[str, GenrePreferenceValue]:
         """Retourner les preferences pretes pour `build_profile`."""
@@ -122,9 +141,11 @@ class PreferencesEditor:
             if mode == "crisp":
                 preferences[genre] = max(0.0, min(1.0, value))
             elif mode == "intervalle":
+                upper_value = float(self.upper_vars[genre].get())
+                lower, upper = sorted((max(0.0, min(1.0, value)), max(0.0, min(1.0, upper_value))))
                 preferences[genre] = IntervalGenrePreference(
-                    lower=max(0.0, value - 0.1),
-                    upper=min(1.0, value + 0.1),
+                    lower=lower,
+                    upper=upper,
                 )
             else:
                 preferences[genre] = LinguisticGenrePreference(self._dominant_term(value))
@@ -143,7 +164,22 @@ class PreferencesEditor:
         self.touched_genres.add(genre)
         self.label_vars[genre].set(self._dominant_label(value))
         if self.on_change is not None:
-            self.on_change("genre_preference", value)
+            self.on_change(genre, value)
+
+    def _on_interval_changed(self, genre: str) -> None:
+        self.touched_genres.add(genre)
+
+    def _on_mode_changed(self, genre: str) -> None:
+        self.touched_genres.add(genre)
+        upper_scale = self.upper_scales.get(genre)
+        if upper_scale is None:
+            return
+        if self.mode_vars[genre].get() == "intervalle":
+            upper_scale.grid()
+            if float(self.upper_vars[genre].get()) < float(self.value_vars[genre].get()):
+                self.upper_vars[genre].set(float(self.value_vars[genre].get()))
+        else:
+            upper_scale.grid_remove()
 
     def _dominant_label(self, value: float) -> str:
         term = self._dominant_term(value)

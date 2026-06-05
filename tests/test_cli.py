@@ -103,6 +103,30 @@ def test_recommend_command_outputs_top_n_and_explanations(tmp_path: Path) -> Non
     assert "Regles floues activees" in result.output
 
 
+def test_recommend_uses_group_data_dir_option(tmp_path: Path) -> None:
+    """recommend respecte le --data-dir fourni au groupe CLI."""
+
+    _write_cli_movielens_dataset(tmp_path)
+
+    result = CliRunner().invoke(
+        main,
+        [
+            "--data-dir",
+            str(tmp_path),
+            "recommend",
+            "--user-id",
+            "1",
+            "--top-n",
+            "1",
+            "--set-genre",
+            "Sci-Fi=forte",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Matrix Test (1999)" in result.output
+
+
 def test_profile_command_parses_explicit_genres() -> None:
     """La commande profile affiche les preferences explicites."""
 
@@ -132,7 +156,7 @@ def test_dataset_stats_accepts_data_dir_option(tmp_path: Path) -> None:
 
     _write_cli_movielens_dataset(tmp_path)
 
-    result = CliRunner().invoke(main, ["dataset-stats", "--data-dir", str(tmp_path), "--show-genres"])
+    result = CliRunner().invoke(main, ["--data-dir", str(tmp_path), "dataset-stats", "--show-genres"])
 
     assert result.exit_code == 0
     assert "movies=3" in result.output

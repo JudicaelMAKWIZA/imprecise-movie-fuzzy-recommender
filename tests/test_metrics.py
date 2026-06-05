@@ -5,6 +5,7 @@ import pytest
 from evaluation.evaluator import Evaluator
 from evaluation.metrics import coverage, diversity_score, precision_at_n, recall_at_n
 from data_manager.movie_repository import MovieRepository
+from data_manager.preprocessor import MovieLensPreprocessor
 from data_manager.schemas import MovieFeatures
 from fuzzy.fuzzifier import Fuzzifier
 from fuzzy.inference_engine import MamdaniInferenceEngine
@@ -53,15 +54,16 @@ def test_evaluator_evaluate_lists() -> None:
 
 
 def test_evaluator_evaluate_user_temporal_split() -> None:
-    """Le profil est derive du train et la pertinence du test temporel."""
+    """Le profil et les features de scoring sont derives du train temporel."""
 
     pd = pytest.importorskip("pandas")
     raw_data = {
         "ratings": pd.DataFrame(
             [
                 {"userId": 1, "movieId": 1, "rating": 5.0, "timestamp": 1},
-                {"userId": 1, "movieId": 2, "rating": 5.0, "timestamp": 2},
-                {"userId": 2, "movieId": 1, "rating": 5.0, "timestamp": 3},
+                {"userId": 2, "movieId": 1, "rating": 5.0, "timestamp": 2},
+                {"userId": 2, "movieId": 2, "rating": 1.0, "timestamp": 3},
+                {"userId": 1, "movieId": 2, "rating": 5.0, "timestamp": 4},
             ]
         ),
         "movies": pd.DataFrame(
@@ -73,20 +75,25 @@ def test_evaluator_evaluate_user_temporal_split() -> None:
         "tags": pd.DataFrame(columns=["userId", "movieId", "tag", "timestamp"]),
         "links": pd.DataFrame(columns=["movieId", "imdbId", "tmdbId"]),
     }
-    recommender = FuzzyRecommender(
-        repository=MovieRepository(
-            [
-                MovieFeatures(1, "Train Sci-Fi", ["Sci-Fi"], 4.8, 300),
-                MovieFeatures(2, "Heldout Sci-Fi", ["Sci-Fi"], 4.8, 300),
-            ]
-        ),
+    class SpyRecommender(FuzzyRecommender):
+        cloned_repository: MovieRepository | None = None
+
+        def with_repository(self, repository: MovieRepository) -> FuzzyRecommender:
+            self.cloned_repository = repository
+            return super().with_repository(repository)
+
+    recommender = SpyRecommender(
+        repository=MovieRepository.from_dataframe(MovieLensPreprocessor().build_movie_features(raw_data)),
         fuzzifier=Fuzzifier.default_v1(),
         inference_engine=MamdaniInferenceEngine(RuleBase.load_minimal_v1()),
     )
 
     report = Evaluator(top_n=2).evaluate_user(user_id=1, raw_data=raw_data, recommender=recommender, test_ratio=0.5)
 
-    assert report.metrics["recall_at_n"] == pytest.approx(1.0)
+    assert recommender.cloned_repository is not None
+    assert recommender.cloned_repository.get_by_id(2).average_rating == pytest.approx(1.0)
+    assert recommender.repository.get_by_id(2).average_rating == pytest.approx(3.0)
+    assert "recall_at_n" in report.metrics
     assert any("train=1, test=1" in note for note in report.notes)
 
 
@@ -129,6 +136,10 @@ def test_evaluator_uses_passed_recommender() -> None:
                     {"movie": self.repository.get_by_id(2), "score": 0.9},
                 )()
             ][:top_n]
+
+        def with_repository(self, repository):
+            self.repository = repository
+            return self
 
     recommender = CountingRecommender()
 

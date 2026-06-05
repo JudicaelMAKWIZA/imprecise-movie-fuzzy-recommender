@@ -32,10 +32,9 @@ class MembershipPlotter:
         if points < 2:
             raise ValueError("points doit etre superieur ou egal a 2.")
 
-        import matplotlib.pyplot as plt
-
         x_values = np.linspace(variable.universe_min, variable.universe_max, points)
-        figure, axis = plt.subplots()
+        figure = Figure()
+        axis = figure.subplots()
         for fuzzy_set in variable.fuzzy_sets.values():
             y_values = [fuzzy_set.membership(float(value)) for value in x_values]
             axis.plot(x_values, y_values, label=fuzzy_set.label or fuzzy_set.name)

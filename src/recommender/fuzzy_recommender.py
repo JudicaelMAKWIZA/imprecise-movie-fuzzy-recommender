@@ -8,7 +8,7 @@ services specialises.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Mapping
 
 from data_manager.movie_repository import MovieRepository
@@ -78,6 +78,11 @@ class FuzzyRecommender:
     preferred_genre_threshold: float = 0.2
     neutral_average_rating: float = 3.5
     not_covered: list[Recommendation] = field(default_factory=list, init=False)
+
+    def with_repository(self, repository: MovieRepository) -> FuzzyRecommender:
+        """Retourner une facade equivalente branchee sur un autre repository."""
+
+        return replace(self, repository=repository)
 
     def recommend(self, profile: UserProfile, top_n: int = 10) -> list[Recommendation]:
         """Produire une liste Top-N de recommandations.
