@@ -1,8 +1,6 @@
 # Système de recommandation flou basé sur Mamdani
 
-Projet académique de logique floue appliqué à la recommandation de films à partir du jeu de données MovieLens (`ml-latest-small`).
-
-Le système implémente un moteur flou de type Mamdani développé principalement from scratch afin de démontrer les différentes étapes d'un système de recommandation fondé sur des préférences imprécises.
+Le système implémente un moteur flou de type Mamdani développé principalement from scratch afin de démontrer les différentes étapes d'un système de recommandation de films à partir du jeu de données MovieLens (`ml-latest-small`) fondé sur des préférences imprécises.
 
 ---
 
