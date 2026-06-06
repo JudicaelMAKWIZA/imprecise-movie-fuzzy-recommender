@@ -197,8 +197,12 @@ def test_preferences_editor_highlights_each_changed_genre() -> None:
         editor._on_scale_changed("Action", "0.3")
         editor._on_scale_changed("Drama", "0.8")
 
-        assert view.highlight_values[("genre_preference", "Action")] == pytest.approx(0.3)
-        assert view.highlight_values[("genre_preference", "Drama")] == pytest.approx(0.8)
+        assert set(view.highlight_values) == {
+            ("genre_preference", "Action"),
+            ("genre_preference", "Drama"),
+        }
+        assert view.highlight_values[("genre_preference", "Action")] == "faible"
+        assert view.highlight_values[("genre_preference", "Drama")] == "forte"
     finally:
         root.destroy()
 

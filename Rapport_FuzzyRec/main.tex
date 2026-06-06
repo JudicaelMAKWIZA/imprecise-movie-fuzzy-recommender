@@ -1,0 +1,90 @@
+\documentclass[11pt]{article}
+
+\usepackage[french]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc,shadows,shapes.geometric,fit}
+\usepackage{booktabs}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{cite}
+\usepackage{placeins}
+\usepackage{array}
+\usepackage{longtable}
+
+\graphicspath{{figures/}}
+\linespread{1.08}
+\sloppy
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=blue
+}
+
+\newcommand{\github}{\url{https://github.com/JudicaelMAKWIZA/imprecise-movie-fuzzy-recommender}}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  columns=fullflexible,
+  frame=single,
+  breaklines=true,
+  showstringspaces=false
+}
+
+\begin{document}
+
+\thispagestyle{empty}
+\begin{center}
+  {\bfseries\small REPUBLIQUE DEMOCRATIQUE DU CONGO} \\[2pt]
+  {\bfseries\small UNIVERSITE DE KINSHASA} \\[6pt]
+  \includegraphics[width=0.14\textwidth]{images.png} \\[6pt]
+  {\small FACULTE DES SCIENCES ET TECHNOLOGIES \\ Mention Mathematiques, Statistique et Informatique} \\[2pt]
+  {\small B.P. 190 KINSHASA XI} \\[6pt]
+  {\small Master 2} \\[6pt]
+  {\bfseries\large LOGIQUE FLOUE EN INTELLIGENCE ARTIFICIELLE} \\[12pt]
+  {\Large\bfseries Systeme de Recommandation Flou base sur les Preferences Imprecises des Utilisateurs} \\[8pt]
+  {\normalsize\itshape Application au catalogue MovieLens via une inference de Mamdani} \\[14pt]
+  {\normalsize Sujet 12} \\[12pt]
+  {\normalsize DUASENGE MAYANO Brummel} \\[10pt]
+  {\normalsize Juin 2026}
+\end{center}
+
+\vspace{10pt}
+\begin{abstract}
+Ce rapport presente la conception, l'implementation et l'evaluation d'un systeme de recommandation de films fonde sur la logique floue. Le probleme traite est celui des preferences utilisateur imprecises, souvent exprimees sous forme linguistique ou intervalle plutot que par une note numerique unique. Le systeme propose combine un pre-filtrage par genre, une inference de Mamdani et une defuzzification par centroide afin de produire un score interpretable pour chaque film candidat. L'application est realisee sur le jeu de donnees MovieLens et exposee a travers une interface en ligne de commande et une interface graphique Tkinter.
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+\input{sections/01_introduction}
+\input{sections/02_cadre_theorique}
+\input{sections/03_architecture}
+\input{sections/04_modelisation_floue}
+\input{sections/05_preferences_imprecises}
+\input{sections/06_pipeline}
+\input{sections/07_implementation}
+\input{sections/08_interfaces}
+\input{sections/09_resultats}
+\input{sections/10_discussion_conclusion}
+
+\newpage
+\bibliographystyle{plain}
+\bibliography{references}
+
+\newpage
+\appendix
+\section{Code source}
+L'integralite du code source, des tests et de la configuration est publiee sous licence libre dans le depot public suivant : \github. Le lecteur y trouvera les instructions d'installation, le jeu de donnees MovieLens utilise et les scripts permettant de reproduire l'ensemble des resultats presentes dans ce rapport.
+
+\end{document}

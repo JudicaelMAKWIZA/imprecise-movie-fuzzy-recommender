@@ -1,0 +1,46 @@
+\section{Interfaces utilisateur}
+
+Deux interfaces sont proposees. La CLI sert a reproduire rapidement les experiences et a automatiser les tests. La GUI sert a manipuler les preferences de maniere visuelle et a observer les courbes d'appartenance.
+
+\subsection{Interface CLI}
+
+L'interface en ligne de commande est exposee par \texttt{main.py}. Elle regroupe notamment les sous-commandes \texttt{recommend}, \texttt{evaluate}, \texttt{dataset-stats} et \texttt{gui}. La commande \texttt{recommend} accepte un identifiant utilisateur, un nombre de recommandations et des preferences explicites. Elle peut aussi afficher l'explication des regles activees.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{cli_recommend.png}
+\caption{Capture de la commande CLI \texttt{recommend} pour \texttt{user\_id=1}. La sortie affiche le Top-N, le score defuzzifie et une trace textuelle des regles Mamdani activees pour les premieres recommandations.}
+\label{fig:cli_recommend}
+\end{figure}
+
+La CLI est particulierement utile pour verifier la reproductibilite des resultats, car les memes parametres peuvent etre relances sans interaction graphique.
+
+\subsection{Interface GUI}
+
+L'interface graphique Tkinter est organisee en trois zones. La premiere zone permet de choisir l'utilisateur, le nombre de recommandations et le dossier MovieLens. Le bouton \emph{Changer dossier} permet de charger un autre dataset compatible. La deuxieme zone contient un notebook avec les onglets \emph{Preferences} et \emph{Courbes}. La troisieme zone affiche les films recommandes et la trace d'explication.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{gui_preferences.png}
+\caption{Onglet des preferences : chaque genre dispose d'un curseur, d'un libelle linguistique dominant et d'une combobox permettant de choisir le mode linguistique, crisp ou intervalle.}
+\label{fig:gui_preferences}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{gui_courbes.png}
+\caption{Onglet des courbes : les fonctions d'appartenance des variables linguistiques sont integrees dans la GUI afin de rendre visible la transformation des preferences.}
+\label{fig:gui_courbes}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{gui_resultats.png}
+\caption{Zone des resultats : le Top-N est affiche dans un tableau et la trace d'explication detaille les degres flous et les regles activees pour la recommandation selectionnee.}
+\label{fig:gui_resultats}
+\end{figure}
+\FloatBarrier
+
+Deux problemes UX initiaux ont ete corriges. D'abord, la saisie par texte a ete remplacee par des curseurs par thematique, ce qui rend les preferences plus directes. Ensuite, la coherence entre les modes numerique, linguistique et intervalle est assuree par une combobox par genre. Ainsi, la GUI ne force pas l'utilisateur a connaitre la syntaxe CLI pour experimenter.
+
+Ces interfaces permettent maintenant de produire les resultats experimentaux presentes dans la section suivante.

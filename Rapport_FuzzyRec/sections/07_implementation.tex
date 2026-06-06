@@ -1,0 +1,42 @@
+\section{Implementation}
+
+L'implementation vise deux objectifs : rester proche du modele theorique et offrir une base testable. Les choix techniques sont donc simples, largement disponibles et adaptes a une execution locale.
+
+\subsection{Stack technologique}
+
+Le projet est implemente en Python. Le fichier \texttt{pyproject.toml} declare une compatibilite \texttt{Python >=3.10}. Les principales dependances sont \texttt{pandas} pour la manipulation des tables MovieLens, \texttt{NumPy} pour les calculs numeriques, \texttt{PyYAML} pour la configuration, \texttt{Tkinter} pour la GUI, \texttt{Matplotlib} pour les figures et \texttt{pytest} pour les tests. Le paquet \texttt{click} fournit l'interface CLI.
+
+\subsection{Organisation du code}
+
+L'arborescence du dossier \texttt{src/} suit les modules presentes dans l'architecture :
+\begin{verbatim}
+src/
+  data_manager/    chargement, validation, preprocessing
+  fuzzy/           ensembles flous, variables, Mamdani, defuzzification
+  recommender/     profils, prefiltrage, scoring, explications
+  evaluation/      metriques et protocole train/test
+  ui/              commandes CLI et interface Tkinter
+  visualization/   generation des courbes d'appartenance
+\end{verbatim}
+
+Cette organisation permet de tester separement les composants. Par exemple, la defuzzification peut etre verifiee sans lancer l'interface graphique, et l'evaluation peut reutiliser un moteur deja construit.
+
+\subsection{Configuration externalisee}
+
+Le fichier \texttt{config/fuzzy\_config.yaml} contient les variables linguistiques, les fonctions d'appartenance, les regles, la methode de defuzzification, le seuil de pre-filtrage et les chemins de donnees. Cette externalisation ameliore la reproductibilite : les valeurs du rapport peuvent etre relancees avec le meme fichier de configuration. Elle facilite aussi les ajustements : ajouter des regles ou modifier une fonction d'appartenance ne demande pas de recompilation ni de modification des interfaces.
+
+\subsection{Execution}
+
+Les commandes principales sont les suivantes :
+\begin{verbatim}
+python main.py recommend --user-id 1 --top-n 10 \
+  --set-genre "Sci-Fi=forte,Action=moyenne" --explain
+
+python main.py gui --data-dir data/movie
+
+python main.py evaluate --user-id 1 --top-n 10
+\end{verbatim}
+
+La premiere commande produit un Top-N explique, la deuxieme lance l'interface graphique, et la troisieme calcule les metriques d'evaluation. Ces commandes constituent le point d'entree des experiences de la section 9.
+
+La section suivante presente les interfaces qui rendent ces operations accessibles a l'utilisateur.

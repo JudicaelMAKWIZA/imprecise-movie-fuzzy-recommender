@@ -1,0 +1,122 @@
+Top-10 recommandations pour user_id=1
+1. 260 | 0.8917 | Star Wars: Episode IV - A New Hope (1977)
+2. 2571 | 0.8891 | Matrix, The (1999)
+3. 1196 | 0.7418 | Star Wars: Episode V - The Empire Strikes Back (1980)
+4. 1580 | 0.7000 | Men in Black (a.k.a. MIB) (1997)
+5. 5349 | 0.7000 | Spider-Man (2002)
+6. 1206 | 0.7000 | Clockwork Orange, A (1971)
+7. 2716 | 0.7000 | Ghostbusters (a.k.a. Ghost Busters) (1984)
+8. 5445 | 0.7000 | Minority Report (2002)
+9. 1356 | 0.7000 | Star Trek: First Contact (1996)
+10. 589 | 0.7000 | Terminator 2: Judgment Day (1991)
+
+Explication #1
+Film : Star Wars: Episode IV - A New Hope (1977)
+Score de recommandation : 0.8917 (fortement recommande, sortie dominante: tres fort)
+Pourquoi ce film est recommande :
+- preference de genre = forte (mu=0.8000, valeur=0.75)
+- note moyenne = excellente (mu=0.4622, valeur=4.231075697211155)
+- popularite = tres populaire (mu=0.6375, valeur=251.0)
+Regles floues activees :
+- R1 [mu=0.4622] : preference de genre=forte (mu=0.8000) ET note moyenne=excellente (mu=0.4622) ET popularite=tres populaire (mu=0.6375) -> tres fort
+Defuzzification centroide : 0.8917
+
+Explication #2
+Film : Matrix, The (1999)
+Score de recommandation : 0.8891 (fortement recommande, sortie dominante: tres fort)
+Pourquoi ce film est recommande :
+- preference de genre = forte (mu=0.8000, valeur=0.75)
+- note moyenne = bonne (mu=0.4394, valeur=4.192446043165468)
+- popularite = tres populaire (mu=0.9750, valeur=278.0)
+Regles floues activees :
+- R1 [mu=0.3849] : preference de genre=forte (mu=0.8000) ET note moyenne=excellente (mu=0.3849) ET popularite=tres populaire (mu=0.9750) -> tres fort
+Defuzzification centroide : 0.8891
+
+Explication #3
+Film : Star Wars: Episode V - The Empire Strikes Back (1980)
+Score de recommandation : 0.7418 (recommandation moderee, sortie dominante: fort)
+Pourquoi ce film est recommande :
+- preference de genre = forte (mu=0.8000, valeur=0.75)
+- note moyenne = excellente (mu=0.4313, valeur=4.2156398104265405)
+- popularite = populaire (mu=0.3900, valeur=211.0)
+Regles floues activees :
+- R1 [mu=0.1375] : preference de genre=forte (mu=0.8000) ET note moyenne=excellente (mu=0.4313) ET popularite=tres populaire (mu=0.1375) -> tres fort
+- R3 [mu=0.3900] : preference de genre=forte (mu=0.8000) ET note moyenne=bonne (mu=0.4062) ET popularite=populaire (mu=0.3900) -> fort
+Defuzzification centroide : 0.7418
+
+Explication #4
+Film : Men in Black (a.k.a. MIB) (1997)
+Score de recommandation : 0.7000 (recommandation moderee, sortie dominante: fort)
+Pourquoi ce film est recommande :
+- preference de genre = forte (mu=0.8000, valeur=0.75)
+- note moyenne = bonne (mu=0.4798, valeur=3.487878787878788)
+- popularite = populaire (mu=0.8500, valeur=165.0)
+Regles floues activees :
+- R3 [mu=0.4798] : preference de genre=forte (mu=0.8000) ET note moyenne=bonne (mu=0.4798) ET popularite=populaire (mu=0.8500) -> fort
+Defuzzification centroide : 0.7000
+
+Explication #5
+Film : Spider-Man (2002)
+Score de recommandation : 0.7000 (recommandation moderee, sortie dominante: fort)
+Pourquoi ce film est recommande :
+- preference de genre = forte (mu=0.8000, valeur=0.75)
+- note moyenne = bonne (mu=0.5683, valeur=3.540983606557377)
+- popularite = populaire (mu=0.6000, valeur=122.0)
+Regles floues activees :
+- R3 [mu=0.5683] : preference de genre=forte (mu=0.8000) ET note moyenne=bonne (mu=0.5683) ET popularite=populaire (mu=0.6000) -> fort
+Defuzzification centroide : 0.7000
+
+Explication #6
+Film : Clockwork Orange, A (1971)
+Score de recommandation : 0.7000 (recommandation moderee, sortie dominante: fort)
+Pourquoi ce film est recommande :
+- preference de genre = forte (mu=1.0000, valeur=LinguisticGenrePreference(term='forte'))
+- note moyenne = bonne (mu=0.7202, valeur=3.995833333333333)
+- popularite = populaire (mu=0.5714, valeur=120.0)
+Regles floues activees :
+- R3 [mu=0.5714] : preference de genre=forte (mu=1.0000) ET note moyenne=bonne (mu=0.7202) ET popularite=populaire (mu=0.5714) -> fort
+Defuzzification centroide : 0.7000
+
+Explication #7
+Film : Ghostbusters (a.k.a. Ghost Busters) (1984)
+Score de recommandation : 0.7000 (recommandation moderee, sortie dominante: fort)
+Pourquoi ce film est recommande :
+- preference de genre = forte (mu=0.8000, valeur=0.75)
+- note moyenne = bonne (mu=0.9583, valeur=3.775)
+- popularite = populaire (mu=0.5714, valeur=120.0)
+Regles floues activees :
+- R3 [mu=0.5714] : preference de genre=forte (mu=0.8000) ET note moyenne=bonne (mu=0.9583) ET popularite=populaire (mu=0.5714) -> fort
+Defuzzification centroide : 0.7000
+
+Explication #8
+Film : Minority Report (2002)
+Score de recommandation : 0.7000 (recommandation moderee, sortie dominante: fort)
+Pourquoi ce film est recommande :
+- preference de genre = forte (mu=0.8000, valeur=0.75)
+- note moyenne = bonne (mu=0.7292, valeur=3.6375)
+- popularite = populaire (mu=0.5714, valeur=120.0)
+Regles floues activees :
+- R3 [mu=0.5714] : preference de genre=forte (mu=0.8000) ET note moyenne=bonne (mu=0.7292) ET popularite=populaire (mu=0.5714) -> fort
+Defuzzification centroide : 0.7000
+
+Explication #9
+Film : Star Trek: First Contact (1996)
+Score de recommandation : 0.7000 (recommandation moderee, sortie dominante: fort)
+Pourquoi ce film est recommande :
+- preference de genre = forte (mu=0.8000, valeur=0.75)
+- note moyenne = bonne (mu=0.8870, valeur=3.879120879120879)
+- popularite = modere (mu=0.4833, valeur=91.0)
+Regles floues activees :
+- R3 [mu=0.1571] : preference de genre=forte (mu=0.8000) ET note moyenne=bonne (mu=0.8870) ET popularite=populaire (mu=0.1571) -> fort
+Defuzzification centroide : 0.7000
+
+Explication #10
+Film : Terminator 2: Judgment Day (1991)
+Score de recommandation : 0.7000 (recommandation moderee, sortie dominante: fort)
+Pourquoi ce film est recommande :
+- preference de genre = forte (mu=0.8000, valeur=0.75)
+- note moyenne = bonne (mu=0.7557, valeur=3.970982142857143)
+- popularite = tres populaire (mu=0.3000, valeur=224.0)
+Regles floues activees :
+- R3 [mu=0.2600] : preference de genre=forte (mu=0.8000) ET note moyenne=bonne (mu=0.7557) ET popularite=populaire (mu=0.2600) -> fort
+Defuzzification centroide : 0.7000

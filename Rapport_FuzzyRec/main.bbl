@@ -1,0 +1,53 @@
+\begin{thebibliography}{1}
+
+\bibitem{bobillo2011}
+Fernando Bobillo and Umberto Straccia.
+\newblock Fuzzy ontology representation using owl 2.
+\newblock {\em International Journal of Approximate Reasoning},
+  52(7):1073--1094, 2011.
+
+\bibitem{harper2015}
+F.~Maxwell Harper and Joseph~A. Konstan.
+\newblock The movielens datasets: History and context.
+\newblock {\em ACM Transactions on Interactive Intelligent Systems},
+  5(4):1--19, 2015.
+
+\bibitem{kasereka2026}
+Selain Kasereka.
+\newblock Logique floue en intelligence artificielle.
+\newblock Notes de cours, M2 Informatique, Universite de Kinshasa, 2026.
+
+\bibitem{klir1995}
+George~J. Klir and Bo~Yuan.
+\newblock {\em Fuzzy Sets and Fuzzy Logic: Theory and Applications}.
+\newblock Prentice Hall, 1995.
+
+\bibitem{mamdani1975}
+Ebrahim~H. Mamdani and Sedrak Assilian.
+\newblock An experiment in linguistic synthesis with a fuzzy logic controller.
+\newblock {\em International Journal of Man-Machine Studies}, 7(1):1--13, 1975.
+
+\bibitem{ross2010}
+Timothy~J. Ross.
+\newblock {\em Fuzzy Logic with Engineering Applications}.
+\newblock Wiley, 3 edition, 2010.
+
+\bibitem{yager1988}
+Ronald~R. Yager.
+\newblock On ordered weighted averaging aggregation operators in multicriteria
+  decisionmaking.
+\newblock {\em IEEE Transactions on Systems, Man, and Cybernetics},
+  18(1):183--190, 1988.
+
+\bibitem{zadeh1965}
+Lotfi~A. Zadeh.
+\newblock Fuzzy sets.
+\newblock {\em Information and Control}, 8(3):338--353, 1965.
+
+\bibitem{zadeh1975}
+Lotfi~A. Zadeh.
+\newblock The concept of a linguistic variable and its application to
+  approximate reasoning.
+\newblock {\em Information Sciences}, 8(3):199--249, 1975.
+
+\end{thebibliography}

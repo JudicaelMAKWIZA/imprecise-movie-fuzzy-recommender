@@ -1,0 +1,23 @@
+\section{Modelisation des preferences imprecises}
+
+Le coeur du sujet porte sur la maniere de representer une preference qui n'est pas parfaitement numerique. Le systeme distingue explicitement la saisie utilisateur de son exploitation par le moteur flou.
+
+\subsection{Trois modes de saisie}
+
+Le profil utilisateur accepte trois formes. La premiere est linguistique, par exemple \texttt{Sci-Fi=forte}, et correspond a \texttt{LinguisticGenrePreference}. La deuxieme est un intervalle, par exemple \texttt{Action=0.5..0.8}, represente par \texttt{IntervalGenrePreference}. La troisieme est crisp, c'est-a-dire une valeur ponctuelle dans $[0,1]$.
+
+Dans la version actuelle, les valeurs crisp sont acceptees seulement lorsque ce mode est choisi explicitement. Cette contrainte evite de diluer l'objectif du projet, qui est de mettre en avant les preferences imprecises plutot qu'une simple notation numerique.
+
+\subsection{Projection vers des degres d'appartenance}
+
+La fonction \texttt{Fuzzifier.fuzzify\_imprecise\_value} realise la transformation vers les degres flous. Pour un terme linguistique, le systeme calcule l'alpha-cut a 0.5 du terme correspondant, puis projette cet intervalle sur toutes les fonctions d'appartenance de la variable. Pour un intervalle explicite, la projection prend le maximum atteint par chaque terme sur la plage. Pour une valeur crisp, la fuzzification classique est appliquee.
+
+Par exemple, une preference \texttt{forte} n'est pas remplacee par une constante unique. Elle active la zone du terme \emph{forte} et peut conserver un chevauchement avec le terme voisin. De meme, l'intervalle $0.5..0.8$ peut activer simultanement \emph{moyenne} et \emph{forte}. Cette approche rejoint l'idee generale de la logique floue : l'incertitude est propagee plutot qu'effacee.
+
+\subsection{Agregation multi-genres}
+
+Un film MovieLens peut appartenir a plusieurs genres. La methode \texttt{genre\_preference\_for\_movie} compare donc les genres du film aux preferences declarees dans le profil. Si aucun genre ne correspond, le systeme retourne un etat \emph{inconnu}, distinct d'une preference faible. Si plusieurs genres correspondent, la strategie par defaut calcule la moyenne des forces de preference. Une strategie par maximum reste disponible, mais elle est moins nuancee, car elle peut masquer une preference faible associee a un autre genre. Une extension naturelle consisterait a utiliser des operateurs OWA pour controler plus finement l'optimisme ou la prudence de cette aggregation \cite{yager1988}.
+
+Ainsi, avec un profil $\{\text{Sci-Fi}: \text{forte}, \text{Action}: 0.5..0.8\}$, un film \emph{Action|Sci-Fi} combine une preference linguistique forte et un intervalle moyen-fort. Le systeme conserve cette nuance jusqu'a la fuzzification, puis active les regles Mamdani selon les degres obtenus.
+
+Une fois les preferences representees, il reste a organiser leur passage dans la chaine complete de recommandation. C'est l'objet de la section suivante.

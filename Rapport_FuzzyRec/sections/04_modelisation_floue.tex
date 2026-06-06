@@ -1,0 +1,86 @@
+\section{Modelisation floue}
+
+La modelisation floue V1 repose sur quatre variables linguistiques et une base minimale de huit regles. Les definitions sont externalisees dans \texttt{config/fuzzy\_config.yaml}, ce qui rend le systeme inspectable et ajustable sans modifier le code Python.
+
+\subsection{Variables linguistiques V1}
+
+\begin{table}[H]
+\centering
+\caption{Variables linguistiques de la V1.}
+\label{tab:variables}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Variable & Univers & Termes \\
+\midrule
+\texttt{genre\_preference} & $[0,1]$ & faible, moyenne, forte \\
+\texttt{average\_rating} & $[0.5,5]$ & mauvaise, correcte, bonne, excellente \\
+\texttt{popularity} & $[0,350]$ & confidentiel, modere, populaire, tres populaire \\
+\texttt{recommendation\_score} & $[0,1]$ & tres faible, faible, moyen, fort, tres fort \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Les trois premieres variables sont les entrees du systeme Mamdani. La quatrieme est la variable de sortie defuzzifiee pour obtenir le score final.
+
+\subsection{Fonctions d'appartenance}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{membership_genre_preference.png}
+\caption{Fonctions d'appartenance de la preference de genre.}
+\label{fig:membership_genre_preference}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{membership_average_rating.png}
+\caption{Fonctions d'appartenance de la note moyenne.}
+\label{fig:membership_average_rating}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{membership_popularity.png}
+\caption{Fonctions d'appartenance de la popularite.}
+\label{fig:membership_popularity}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{membership_recommendation_score.png}
+\caption{Fonctions d'appartenance du score de recommandation.}
+\label{fig:membership_recommendation_score}
+\end{figure}
+\FloatBarrier
+
+\subsection{Base de regles minimale}
+
+\begin{table}[H]
+\centering
+\caption{Base de regles Mamdani minimale.}
+\label{tab:rules}
+\scriptsize
+\begin{tabular}{@{}p{0.08\textwidth}p{0.59\textwidth}p{0.18\textwidth}@{}}
+\toprule
+Regle & Antecedents & Consequence \\
+\midrule
+R1 & preference forte, note excellente, popularite tres populaire & tres fort \\
+R2 & preference forte, note excellente, popularite confidentiel & fort \\
+R3 & preference forte, note bonne, popularite populaire & fort \\
+R4 & preference moyenne, note excellente, popularite tres populaire & fort \\
+R5 & preference moyenne, note bonne, popularite modere & moyen \\
+R6 & preference faible, note excellente, popularite tres populaire & moyen \\
+R7 & preference forte, note mauvaise, popularite populaire & faible \\
+R8 & preference faible, note mauvaise, popularite confidentiel & tres faible \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Cette base de regles est volontairement compacte. Elle suffit a demontrer le raisonnement flou tout en gardant chaque decision explicable.
+
+\subsection{Agregation et defuzzification}
+
+Le moteur Mamdani utilise le minimum pour combiner les antecedents d'une regle, puis le maximum pour agreger les sorties activees. La defuzzification est realisee par centroide, conformement au parametrage \texttt{defuzzification\_method: centroid}. La figure d'inference de la section 9 illustre cette surface agregee et la position du centroide.
+
+La section suivante precise comment les preferences utilisateur, souvent imprecises, sont projetees vers ces variables linguistiques.

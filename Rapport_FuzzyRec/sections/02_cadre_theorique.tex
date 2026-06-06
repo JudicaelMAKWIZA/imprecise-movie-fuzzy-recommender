@@ -1,0 +1,62 @@
+\section{Cadre theorique}
+
+Cette section introduit les notions mobilisees dans le systeme developpe. Elle part de la definition d'un ensemble flou, puis montre comment les variables linguistiques et l'inference de Mamdani permettent de manipuler des preferences imprecises.
+
+\subsection{Logique floue et ensembles flous}
+
+Dans la theorie classique des ensembles, un element appartient ou n'appartient pas a un ensemble. La logique floue propose une generalisation : un ensemble flou $\tilde{A}$ defini sur un univers $X$ est caracterise par une fonction d'appartenance
+\[
+\mu_A : X \rightarrow [0,1],
+\]
+ou $\mu_A(x)$ mesure le degre auquel $x$ appartient a $\tilde{A}$ \cite{zadeh1965,klir1995}. Ainsi, une note moyenne de film peut appartenir partiellement au terme \emph{bonne} et partiellement au terme \emph{excellente}.
+
+Deux formes simples sont utilisees dans ce projet. Une fonction triangulaire de parametres $(a,b,c)$ est donnee par :
+\[
+\mu(x)=
+\begin{cases}
+0, & x \leq a,\\
+\frac{x-a}{b-a}, & a < x \leq b,\\
+\frac{c-x}{c-b}, & b < x < c,\\
+0, & x \geq c.
+\end{cases}
+\]
+Une fonction trapezoidale de parametres $(a,b,c,d)$ est donnee par :
+\[
+\mu(x)=
+\begin{cases}
+0, & x \leq a,\\
+\frac{x-a}{b-a}, & a < x \leq b,\\
+1, & b < x \leq c,\\
+\frac{d-x}{d-c}, & c < x < d,\\
+0, & x \geq d.
+\end{cases}
+\]
+Ces fonctions sont simples, mais suffisantes pour obtenir des zones de transition progressives entre termes voisins.
+
+\subsection{Variables linguistiques}
+
+Une variable linguistique associe un univers numerique a un ensemble de termes interpretables \cite{zadeh1975}. Par exemple, la variable \texttt{genre\_preference} est definie sur $[0,1]$ avec les termes \emph{faible}, \emph{moyenne} et \emph{forte}. La granularite choisie influence directement la lisibilite des regles : peu de termes rendent le systeme compact, tandis qu'un nombre plus eleve de termes permet une decision plus fine.
+
+Dans ce travail, les variables linguistiques ne sont pas seulement descriptives. Elles sont les entrees et la sortie du moteur Mamdani : preference de genre, note moyenne, popularite et score de recommandation. Ce lien entre langage et calcul ouvre naturellement la voie a la representation des preferences imprecises.
+
+\subsection{Preferences imprecises}
+
+Une preference imprecise designe une information utilisateur dont la valeur exacte n'est pas connue ou n'est pas exprimee sous forme ponctuelle. Le systeme supporte trois modes. Le mode linguistique permet de saisir un terme comme \emph{forte}. Le mode intervalle permet de saisir une plage telle que $0.6..0.9$. Le mode crisp accepte une valeur numerique unique dans $[0,1]$ lorsque l'utilisateur veut etre precis.
+
+Pour relier ces modes au calcul flou, le systeme utilise une projection vers des degres d'appartenance. Un terme linguistique est transforme en zone d'incertitude par un alpha-cut a 0.5 ; un intervalle est projete en prenant, pour chaque terme, le degre maximal atteint dans la plage. Cette strategie evite de reduire immediatement une expression vague a un seul nombre.
+
+\subsection{Inference de Mamdani}
+
+L'inference de Mamdani est un modele de raisonnement flou fonde sur des regles de la forme \emph{si... alors...} \cite{mamdani1975}. Dans ce projet, le processus suit quatre etapes : fuzzification des entrees, activation des regles, agregation des sorties et defuzzification.
+
+Pour une regle comportant plusieurs antecedents, le degre d'activation est calcule par un operateur minimum. Les sorties activees sont ensuite agregees par maximum. Enfin, le score crisp est obtenu par la methode du centroide :
+\[
+z^*=\frac{\int z\cdot \mu(z)\,dz}{\int \mu(z)\,dz}.
+\]
+Ce choix conserve une interpretation graphique claire : le score final correspond au centre de gravite de la surface floue agregee.
+
+\subsection{Systemes de recommandation et MovieLens}
+
+MovieLens est un ensemble de donnees de reference pour l'etude des systemes de recommandation \cite{harper2015}. La version utilisee dans ce projet contient quatre fichiers principaux : \texttt{movies.csv}, \texttt{ratings.csv}, \texttt{tags.csv} et \texttt{links.csv}. Les films apportent les titres et genres, les notes permettent de calculer des moyennes et des popularites, les tags donnent des annotations libres, et les liens fournissent des identifiants externes.
+
+Le projet exploite principalement les genres, les notes moyennes et le nombre de notes. Ces informations sont suffisantes pour construire une premiere version interpretable du systeme. La section suivante montre comment elles sont organisees dans une architecture logicielle modulaire.

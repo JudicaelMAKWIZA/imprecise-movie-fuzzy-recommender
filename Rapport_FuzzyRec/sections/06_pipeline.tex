@@ -1,0 +1,41 @@
+\section{Pipeline de recommandation}
+
+Le pipeline transforme un profil utilisateur et un catalogue de films en liste Top-N expliquee. Il est implemente principalement dans \texttt{pipeline\_factory.py}, \texttt{fuzzy\_recommender.py} et \texttt{explanation\_engine.py}.
+
+\begin{figure}[H]
+\centering
+\resizebox{0.48\textwidth}{!}{%
+\begin{tikzpicture}[
+  >=Stealth,
+  recstep/.style={draw=black!60, rounded corners, thick, fill=blue!8, minimum width=5.3cm, minimum height=0.82cm, align=center, drop shadow},
+  arr/.style={->, thick}
+]
+  \node[recstep] (p) {Profil utilisateur};
+  \node[recstep, below=0.45cm of p] (pre) {Pre-filtrage par genres};
+  \node[recstep, below=0.45cm of pre] (fuz) {Fuzzification};
+  \node[recstep, below=0.45cm of fuz] (inf) {Inference Mamdani};
+  \node[recstep, below=0.45cm of inf] (agg) {Agregation};
+  \node[recstep, below=0.45cm of agg] (def) {Defuzzification};
+  \node[recstep, below=0.45cm of def] (score) {Score};
+  \node[recstep, below=0.45cm of score] (rank) {Classement};
+  \node[recstep, below=0.45cm of rank] (top) {Top-N};
+  \node[recstep, below=0.45cm of top] (exp) {Explications};
+  \foreach \a/\b in {p/pre,pre/fuz,fuz/inf,inf/agg,agg/def,def/score,score/rank,rank/top,top/exp}
+    \draw[arr] (\a) -- (\b);
+\end{tikzpicture}
+}
+\caption{Pipeline vertical de recommandation.}
+\label{fig:pipeline}
+\end{figure}
+
+La premiere etape construit le profil. Si des preferences explicites sont fournies, elles priment sur l'historique MovieLens. Sinon, le profil est derive des notes de l'utilisateur par genre. Cette construction est centralisee dans \texttt{build\_profile}.
+
+La deuxieme etape effectue un pre-filtrage par genre. Le seuil V1 est fixe a $0.2$ dans la configuration. Les films sans popularite connue sont exclus du Top-N afin d'eviter qu'une valeur manquante soit interpretee comme une faible popularite reelle.
+
+La troisieme etape calcule les entrees crisp ou imprecises du moteur flou : preference de genre, note moyenne et popularite. Ces valeurs sont fuzzifiees selon les variables linguistiques de la V1.
+
+La quatrieme etape active la base de regles Mamdani. Chaque regle produit un degre d'activation et une consequence sur la variable de sortie. Les sorties sont agregees par maximum, puis defuzzifiees par centroide pour produire un score dans $[0,1]$.
+
+Enfin, les films sont tries par score decroissant, puis par popularite, note moyenne et titre. L'objet de recommandation conserve aussi les entrees floues et les regles activees, ce qui permet a \texttt{ExplanationEngine} de generer une trace lisible.
+
+Ce pipeline etant defini, la section suivante presente les choix techniques qui ont permis de l'implementer et de le tester.

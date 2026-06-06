@@ -1,0 +1,19 @@
+\section{Introduction}
+
+Les catalogues numeriques de films, de musiques ou de produits ont atteint une taille qui rend la recherche manuelle peu praticable. Dans ce contexte, les systemes de recommandation jouent un role central : ils filtrent un espace de choix tres large afin de proposer quelques items compatibles avec le profil d'un utilisateur. Toutefois, les preferences humaines sont rarement exprimees sous une forme parfaitement numerique. Un utilisateur peut dire qu'il aime beaucoup la science-fiction, qu'il apprecie moyennement les films d'action, ou qu'il hesite entre plusieurs niveaux d'interet. Ces expressions sont naturelles, mais elles introduisent une imprecision que les modeles classiques traitent souvent par une conversion brutale en notes crisp.
+
+La logique floue fournit un cadre adapte a ce probleme, car elle permet de representer des degres d'appartenance entre 0 et 1 plutot qu'une appartenance binaire \cite{zadeh1965,ross2010}. Dans un systeme de recommandation, cette propriete permet d'associer un film a des termes tels que \emph{bonne note}, \emph{forte popularite} ou \emph{preference moyenne}, puis de combiner ces informations dans une base de regles interpretable. L'enjeu n'est donc pas seulement de produire un classement, mais de conserver une trace comprehensible du raisonnement.
+
+La problematique etudiee dans ce rapport est la suivante : comment representer et traiter computationnellement l'imprecision intrinseque des preferences utilisateur afin de produire des recommandations interpretable et reproductibles ? Cette question est directement liee au sujet 12 du cours de Logique Floue en Intelligence Artificielle \cite{kasereka2026}, qui demande de concevoir un systeme de recommandation flou base sur les preferences imprecises des utilisateurs.
+
+Les objectifs du travail sont les suivants :
+\begin{enumerate}
+  \item modeliser les preferences imprecises a l'aide de la logique floue ;
+  \item concevoir un moteur d'inference de Mamdani dont les regles restent lisibles ;
+  \item appliquer le systeme au jeu de donnees MovieLens ;
+  \item fournir une interface en ligne de commande et une interface graphique permettant l'experimentation.
+\end{enumerate}
+
+Le rapport est organise en dix sections. La section 2 presente le cadre theorique : ensembles flous, variables linguistiques, preferences imprecises, inference de Mamdani et donnees MovieLens. La section 3 decrit l'architecture logicielle. La section 4 detaille la modelisation floue retenue. La section 5 precise la representation des preferences imprecises. La section 6 presente le pipeline de recommandation. La section 7 expose les choix d'implementation. La section 8 decrit les interfaces utilisateur. La section 9 presente les resultats experimentaux. Enfin, la section 10 discute les forces, limites et perspectives du systeme.
+
+La section suivante pose donc les bases theoriques necessaires pour comprendre le passage d'une preference vague a une decision de recommandation interpretable.

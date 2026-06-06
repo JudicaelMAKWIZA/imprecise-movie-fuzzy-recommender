@@ -1,0 +1,53 @@
+\section{Architecture du systeme}
+
+L'architecture du systeme separe clairement les responsabilites : chargement des donnees, calcul flou, recommandation, evaluation, visualisation et interfaces. Cette separation facilite les tests et rend le comportement du moteur plus reproductible.
+
+\begin{figure}[H]
+\centering
+\resizebox{0.92\textwidth}{!}{%
+\begin{tikzpicture}[
+  >=Stealth,
+  layer/.style={draw=black!60, rounded corners, thick, minimum width=4.0cm, minimum height=1.0cm, align=center, fill=blue!8, drop shadow},
+  service/.style={draw=black!55, rounded corners, thick, minimum width=3.4cm, minimum height=0.85cm, align=center, fill=green!9},
+  arr/.style={->, thick}
+]
+  \node[layer] (data) {data\_manager\\chargement et features};
+  \node[layer, right=1.8cm of data] (fuzzy) {fuzzy\\variables, regles, inference};
+  \node[layer, right=1.8cm of fuzzy] (rec) {recommender\\profil, scoring, Top-N};
+  \node[service, below=1.2cm of fuzzy] (eval) {evaluation\\metriques};
+  \node[service, below=1.2cm of data] (vis) {visualization\\courbes};
+  \node[service, below=1.2cm of rec] (ui) {ui\\CLI et GUI};
+  \draw[arr] (data) -- (fuzzy);
+  \draw[arr] (fuzzy) -- (rec);
+  \draw[arr] (rec) -- (eval);
+  \draw[arr] (fuzzy) -- (vis);
+  \draw[arr] (rec) -- (ui);
+  \draw[arr] (vis) -- (ui);
+\end{tikzpicture}
+}
+\caption{Architecture modulaire du systeme FuzzyRec.}
+\label{fig:architecture}
+\end{figure}
+
+Le module \texttt{data\_manager} lit les fichiers MovieLens, valide les tables et construit les caracteristiques de films. Le module \texttt{fuzzy} contient les variables linguistiques, les fonctions d'appartenance, la base de regles, l'inference de Mamdani et la defuzzification. Le module \texttt{recommender} assemble ces services pour produire les recommandations. Les modules \texttt{evaluation}, \texttt{visualization} et \texttt{ui} fournissent respectivement les metriques, les figures et les interfaces.
+
+\begin{table}[H]
+\centering
+\caption{Responsabilites principales des modules.}
+\label{tab:modules}
+\scriptsize
+\begin{tabular}{@{}lll@{}}
+\toprule
+Module & Responsabilite & Fichiers cles \\
+\midrule
+\texttt{data\_manager} & Chargement et preprocessing MovieLens & \texttt{loader.py}, \texttt{preprocessor.py} \\
+\texttt{fuzzy} & Representation floue et Mamdani & \texttt{inference\_engine.py}, \texttt{rule\_base.py} \\
+\texttt{recommender} & Profil, prefiltrage, score Top-N & \texttt{fuzzy\_recommender.py}, \texttt{pipeline\_factory.py} \\
+\texttt{evaluation} & Precision, rappel, couverture, diversite & \texttt{metrics.py}, \texttt{evaluator.py} \\
+\texttt{visualization} & Courbes d'appartenance & \texttt{membership\_plots.py} \\
+\texttt{ui} & CLI et interface Tkinter & \texttt{commands.py}, \texttt{main\_window.py} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Cette organisation prepare la modelisation floue proprement dite : les variables et les regles peuvent etre decrites independamment des interfaces qui les exploitent.

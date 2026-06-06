@@ -1,0 +1,80 @@
+\section{Resultats et evaluation}
+
+Cette section presente des resultats issus d'executions reelles du projet. Les commandes ont ete lancees sur le dossier \texttt{data/movie}, qui correspond au jeu MovieLens small utilise dans le projet.
+
+\subsection{Protocole experimental}
+
+Le protocole utilise le dataset MovieLens \texttt{ml-latest-small} \cite{harper2015}. Le profil d'exemple est \texttt{user\_id=1}, avec les preferences explicites \texttt{Sci-Fi=forte,Action=moyenne}. Le nombre de recommandations est fixe a $5$ pour l'exemple detaille et a $10$ pour l'evaluation. Le seuil de pre-filtrage est celui de la configuration V1, soit $0.2$.
+
+\subsection{Exemple de recommandation detaillee}
+
+La commande executee est :
+\begin{verbatim}
+python main.py recommend --user-id 1 --top-n 5 \
+  --set-genre "Sci-Fi=forte,Action=moyenne" --explain --data-dir data/movie
+\end{verbatim}
+
+Le Top-5 obtenu est presente dans le tableau suivant.
+
+\begin{table}[H]
+\centering
+\caption{Top-5 obtenu pour \texttt{user\_id=1}.}
+\label{tab:top5}
+\small
+\begin{tabular}{@{}clc@{}}
+\toprule
+Rang & Titre & Score \\
+\midrule
+1 & Star Wars: Episode IV - A New Hope (1977) & 0.8917 \\
+2 & Matrix, The (1999) & 0.8891 \\
+3 & Star Wars: Episode V - The Empire Strikes Back (1980) & 0.7418 \\
+4 & Men in Black (a.k.a. MIB) (1997) & 0.7000 \\
+5 & Spider-Man (2002) & 0.7000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Pour la premiere recommandation, la trace indique une preference de genre forte avec $\mu=0.8000$, une note moyenne excellente avec $\mu=0.4622$ et une popularite tres populaire avec $\mu=0.6375$. La regle R1 est activee avec un degre $0.4622$ et produit la sortie \emph{tres fort}. La defuzzification par centroide donne le score $0.8917$.
+
+\subsection{Illustration de l'inference Mamdani}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{exemple_inference_mamdani.png}
+\caption{Illustration de l'inference Mamdani pour la premiere recommandation : les sorties tronquees sont agregees par maximum, puis le centroide fournit le score final.}
+\label{fig:inference_mamdani}
+\end{figure}
+
+La figure montre que la recommandation ne depend pas d'une seule condition. Elle resulte de la combinaison des degres d'appartenance et de l'agregation des consequences floues.
+
+\subsection{Metriques d'evaluation}
+
+Le protocole \texttt{evaluate} realise un decoupage temporel des notes de l'utilisateur. Les notes anciennes construisent le profil, tandis que les notes recentes servent de reference. Les resultats suivants proviennent de trois executions reelles avec \texttt{top-n=10}.
+
+\begin{table}[H]
+\centering
+\caption{Metriques d'evaluation pour trois utilisateurs MovieLens.}
+\label{tab:metrics}
+\small
+\begin{tabular}{@{}ccccc@{}}
+\toprule
+Utilisateur & Precision@10 & Recall@10 & Coverage & Diversite \\
+\midrule
+1 & 0.2000 & 0.0526 & 0.0010 & 0.7746 \\
+2 & 0.0000 & 0.0000 & 0.0010 & 0.7746 \\
+3 & 0.0000 & 0.0000 & 0.0010 & 0.6589 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Ces valeurs doivent etre interpretees comme une verification experimentale de la chaine de calcul plutot que comme une optimisation finale. La base de regles V1 est volontairement minimale, ce qui limite la couverture decisionnelle.
+
+\subsection{Tests automatises}
+
+La commande \texttt{./.venv/bin/pytest -q} a ete executee avant la redaction finale. Le resultat obtenu est :
+\begin{verbatim}
+96 passed in 7.79s
+\end{verbatim}
+Les tests couvrent les fonctions d'appartenance, la fuzzification, la base de regles, l'inference, la defuzzification, le repository MovieLens, le pipeline de recommandation, les explications, les metriques, la CLI et les composants GUI.
+
+Les resultats confirment que la V1 est executable et testee. La section suivante discute ce que cette version demontre, mais aussi ce qu'elle ne pretend pas encore resoudre.

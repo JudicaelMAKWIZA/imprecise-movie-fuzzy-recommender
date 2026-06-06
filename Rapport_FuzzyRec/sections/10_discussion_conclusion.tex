@@ -1,0 +1,21 @@
+\section{Discussion, conclusion et perspectives}
+
+\subsection{Discussion}
+
+La principale force du systeme est son interpretabilite. Chaque recommandation conserve les degres d'appartenance, les regles activees et le score defuzzifie. Cette trace permet d'expliquer pourquoi un film est classe en tete, ce qui est plus transparent qu'un simple score opaque.
+
+Le deuxieme apport est la prise en charge de plusieurs modes d'expression des preferences : linguistique, intervalle et crisp. Le systeme separe la representation imprecise de la decision finale. La preference n'est donc pas immediatement reduite a une note unique ; elle est projetee vers des degres flous et combinee par le moteur Mamdani.
+
+Les limites sont egalement claires. La base V1 contient huit regles seulement. Elle suffit pour demontrer le principe, mais ne couvre pas toutes les situations possibles. Le pre-filtrage par genre reste simple et ne tient pas encore compte des tags ou de la recence. Enfin, la popularite est utilisee comme critere global, sans personnalisation profonde selon le comportement de chaque utilisateur.
+
+\subsection{Adequation au sujet}
+
+Le sujet 12 demande un systeme de recommandation flou base sur les preferences imprecises des utilisateurs \cite{kasereka2026}. Le systeme repond a ce sujet sur quatre points. Premierement, il represente explicitement les preferences imprecises par termes linguistiques et intervalles. Deuxiemement, il utilise un moteur Mamdani interpretable pour convertir ces preferences en score de recommandation. Troisiemement, il applique le modele a un catalogue reel, MovieLens. Quatriemement, il fournit une CLI et une GUI permettant de reproduire les resultats et de visualiser les memberships.
+
+\subsection{Perspectives}
+
+La premiere perspective consiste a etendre la base de regles. Le fichier YAML contient deja une entree \texttt{intermediate} prevue pour une V2 plus riche. La deuxieme perspective est l'integration des tags MovieLens, qui permettraient de modeliser des preferences thematiques plus fines que les genres. Une representation semantique floue, proche des travaux sur les ontologies floues \cite{bobillo2011}, pourrait alors relier genres, mots-cles et concepts narratifs. La troisieme perspective concerne la recence : un film ancien et un film recent pourraient etre traites differemment selon le profil. Enfin, les parametres des fonctions d'appartenance pourraient etre appris ou ajustes automatiquement a partir des historiques utilisateurs.
+
+\subsection{Conclusion}
+
+Ce travail a montre qu'un systeme de recommandation peut traiter des preferences vagues sans les convertir immediatement en notes rigides. En combinant variables linguistiques, preferences imprecises, inference de Mamdani et explications, la solution proposee fournit une V1 coherent, interpretable et reproductible sur MovieLens. Les resultats experimentaux restent modestes, mais ils valident l'objectif principal : construire une chaine complete reliant l'expression naturelle de la preference a une recommandation floue expliquee.
