@@ -1,0 +1,318 @@
+% Fichier généré automatiquement : explication_detaill_e.tex
+\documentclass[a4paper,11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{listings}
+% Allow common UTF-8 accented letters and mu inside \begin{lstlisting}...
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    literate={é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1 {à}{{\`a}}1 {ù}{{\`u}}1 {ô}{{\^o}}1 {â}{{\^a}}1 {î}{{\^i}}1 {ç}{{\c{c}}}1 {É}{{\'E}}1 {œ}{{\oe}}1 {Œ}{{\OE}}1 {€}{{\euro}}1 {μ}{{$\mu$}}1
+}
+
+\title{Explication détaillée — Logique floue et fonctions d'appartenance}
+\author{Généré par l'assistant}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Objectif}
+Ce document rassemble et explique en détail tout ce qui a été discuté dans la session : ensembles flous, fonctions d'appartenance (triangulaire et trapézoïdale), interprétations numériques, choix des paramètres, et illustrations réalisées à partir des données MovieLens. Les images générées sont incluses et commentées.
+
+\section{Rappels simples}
+\subsection{Univers et ensembles}
+L'\emph{univers} $X$ est l'ensemble des valeurs possibles (par exemple toutes les notes disponibles : $[0,5]$ ou celles présentes dans le fichier MovieLens). Un \emph{ensemble flou} $A$ est un concept (par exemple «bon») sur lequel on ne se contente pas d'appartenir/ n'appartenir pas : chaque valeur $x\in X$ reçoit un degr\'e d'appartenance $\mu_A(x)\in[0,1]$.
+
+\subsection{Fonction d'appartenance}
+La fonction $\mu_A : X \to [0,1]$ associe à chaque $x$ un nombre entre 0 et 1 : 0 = pas du tout, 1 = complètement, 0.5 = à moitié. On l'interprète comme \og à quel point $x$ appartient à $A$ \fg{}.
+
+\section{Fonctions triangulaires et trapézoïdales — définitions et interprétations}
+\subsection{Triangle}
+Une fonction triangulaire est définie par trois paramètres $(a,b,c)$ avec $a<b<c$. Sa formule (par morceaux) :
+\[
+\mu(x)=\begin{cases}
+0, & x\le a,\\
+\dfrac{x-a}{b-a}, & a < x \le b,\\
+\dfrac{c-x}{c-b}, & b < x < c,\\
+0, & x\ge c.
+\end{cases}
+\]
+Interprétation : la valeur est nulle avant $a$, augmente linéairement jusqu'à 1 en $b$ (sommet), puis décroît linéairement vers 0 en $c$. Le triangle est utile quand le terme a un seul point central de maximalité.
+
+\subsection{Trapèze}
+Une fonction trapézoïdale est définie par quatre paramètres $(a,b,c,d)$ (avec $a\le b \le c \le d$) :
+\[
+\mu(x)=\begin{cases}
+0, & x\le a,\\
+\dfrac{x-a}{b-a}, & a < x \le b,\\
+1, & b < x \le c,\\
+\dfrac{d-x}{d-c}, & c < x < d,\\
+0, & x\ge d.
+\end{cases}
+\]
+Interprétation : on a un plateau $[b,c]$ où la valeur vaut 1. Le trapèze est utile pour représenter un intervalle de valeurs considérées \og complètement \fg{} dans le terme.
+
+\section{Exemples numériques détaillés}
+\subsection{Pourquoi 0.60 pour $x=2.0$ (triangle)}
+Supposons un triangle avec $a=0.5$, $b=3.0$, $c=3.5$. Pour $x=2.0$ la formule de montée s'applique (car $a < x \le b$) :
+\[
+\mu(2.0)=\frac{2.0-0.5}{3.0-0.5}=\frac{1.5}{2.5}=0.60.
+\]
+Cela signifie que la note 2.0 est à 60\% dans le terme \og low \fg{}.
+
+\subsection{Pourquoi 1.00 pour $x=3.0$ (triangle)}
+Pour le triangle ci-dessus, $b=3.0$, et par définition $\mu(b)=1$. Donc $\mu(3.0)=1.00$.
+
+\subsection{Pourquoi le trapèze peut donner 1.00 pour $x=2.0$}
+Si le trapézoïde low est défini avec paramètres $(a,b,c,d)=(0.5,0.5,2.0,3.0)$ alors le plateau $[b,c]=[0.5,2.0]$ contient $x=2.0$ et donc $\mu(2.0)=1.00$. Le trapèze rend certaines plages \og entièrement \fg{} appartenantes.
+
+\section{Choix des paramètres}
+Les paramètres $(a,b,c,d)$ peuvent être choisis :
+\begin{itemize}
+  \item par expertise (humaine) ;
+  \item automatiquement à partir des données (percentiles, clustering) ;
+  \item par règle simple (espacer régulièrement sur l'échelle).
+\end{itemize}
+Quelques heuristiques courantes : utiliser des trapèzes aux extrémités pour capter toute la queue de la distribution, et des triangles au milieu pour la finesse.
+
+\section{Illustrations et explications pas-à-pas}
+Ci-dessous sont insérées les deux images générées pendant la session.
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figures/membership_examples.png}
+  \caption{Comparaison de deux triangles et d'un trapézoïde (exemples simples). La ligne verticale indique $x=3.0$ et les étiquettes à droite donnent les valeurs $\mu$ en ce point pour chaque fonction.}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.95\linewidth]{figures/membership_moviLens_quantiles.png}
+  \caption{Histogramme des notes MovieLens (distribution globale) avec fonctions d'appartenance basées sur des quantiles. Les lignes pleines sont des triangles (low/mid/high) et les pointillées les trapèzoïdes correspondants.}
+\end{figure}
+
+\section{Interprétation des deux figures}
+\subsection{Figure 1 (membership\_examples.png)}
+Explication détaillée :
+\begin{itemize}
+  \item Triangle (2,3,5) : le sommet à $b=3$ signifie que $\mu(3)=1$. Pour $x$ entre 2 et 3 on monte linéairement. Par exemple, si $x=2.5$ la valeur serait $(2.5-2)/(3-2)=0.5$.
+  \item Triangle (1,3.5,5) : sommet à 3.5; ainsi $x=3.0$ vaut $\mu(3)= (3-1)/(3.5-1)=2/2.5=0.8$.
+  \item Trapézoïde (1,2,4,5) : il a un plateau $[2,4]$ sur lequel $\mu=1$; donc $x=3$ vaut 1.0.
+\end{itemize}
+
+\subsection{Figure 2 (membership\_moviLens\_quantiles.png)}
+Explication détaillée :
+\begin{itemize}
+  \item L'histogramme gris montre la densité des notes (tous films confondus). Les quantiles calculés (extraites de MovieLens) sont : min=0.50, q10=2.00, q25=3.00, q50=3.50, q75=4.00, q90=5.00, max=5.00.
+    \item Les triangles \texttt{low/mid/high} utilisent des triplets $(a,b,c)$ construits à partir de ces quantiles afin d'avoir une partition intuitive :
+    \begin{itemize}
+      \item low = (min, q25, q50)
+      \item mid = (q25, q50, q75)
+      \item high = (q50, q75, max)
+    \end{itemize}
+    \item Les trapèzes montrent des intervalles de tolérance : par exemple \texttt{trap\_mid} couvre [q30, q70] en plateau.
+  \item Les valeurs imprimées pour des échantillons (2.0, 3.0, 4.0) montrent comment la même note peut être plus ou moins \og forte \fg{} selon la forme choisie (triangle vs trapèze).
+\end{itemize}
+
+\section{Code complet utilisé pour générer les images}
+\subsection{Script 1 : tracé d'exemples (membership\_examples)}
+\begin{lstlisting}
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import os
+
+def tri(x,a,b,c):
+    x = np.array(x)
+    y = np.zeros_like(x, dtype=float)
+    # rising
+    left = (x > a) & (x <= b)
+    if b != a:
+        y[left] = (x[left] - a) / (b - a)
+    # peak
+    y[x == b] = 1.0
+    # falling
+    right = (x > b) & (x < c)
+    if c != b:
+        y[right] = (c - x[right]) / (c - b)
+    return y
+
+def trap(x,a,b,c,d):
+    x = np.array(x)
+    y = np.zeros_like(x, dtype=float)
+    left = (x > a) & (x <= b)
+    if b != a:
+        y[left] = (x[left] - a) / (b - a)
+    mid = (x > b) & (x <= c)
+    y[mid] = 1.0
+    right = (x > c) & (x < d)
+    if d != c:
+        y[right] = (d - x[right]) / (d - c)
+    return y
+
+x = np.linspace(0,5,501)
+params_tri1 = (2,3,5)
+params_tri2 = (1,3.5,5)
+params_trap = (1,2,4,5)
+mu1 = tri(x,*params_tri1)
+mu2 = tri(x,*params_tri2)
+mu_trap = trap(x,*params_trap)
+
+img_dir = os.path.join('Rapport_FuzzyRec','figures')
+os.makedirs(img_dir, exist_ok=True)
+img_path = os.path.join(img_dir,'membership_examples.png')
+
+plt.figure(figsize=(8,4))
+plt.plot(x,mu1,label=f"Triangle {params_tri1}")
+plt.plot(x,mu2,label=f"Triangle {params_tri2}")
+plt.plot(x,mu_trap,label=f"Trapezoide {params_trap}")
+
+xv = 3.0
+plt.axvline(x=xv,color='gray',linestyle='--',alpha=0.6)
+mu1_at3 = float(tri([xv],*params_tri1)[0])
+mu2_at3 = float(tri([xv],*params_tri2)[0])
+mu_trap_at3 = float(trap([xv],*params_trap)[0])
+plt.scatter([xv]*3,[mu1_at3,mu2_at3,mu_trap_at3],color=['C0','C1','C2'])
+plt.text(xv+0.05,mu1_at3,f"{mu1_at3:.2f}",color='C0',va='center')
+plt.text(xv+0.05,mu2_at3,f"{mu2_at3:.2f}",color='C1',va='center')
+plt.text(xv+0.05,mu_trap_at3,f"{mu_trap_at3:.2f}",color='C2',va='center')
+
+plt.ylim(-0.05,1.05)
+plt.xlim(0,5)
+plt.xlabel('Note (0-5)')
+plt.ylabel('Degre d appartenance mu')
+plt.title('Exemples : fonctions triangulaire et trapezoidale')
+plt.legend()
+plt.tight_layout()
+plt.savefig(img_path,dpi=150)
+print('Saved', img_path)
+\end{lstlisting}
+
+\subsection{Script 2 : génération basées sur quantiles MovieLens}
+\begin{lstlisting}
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import os
+
+# Robust CSV reading (pandas preferred)
+path = 'data/movie/ratings.csv'
+try:
+    import pandas as pd
+    df = pd.read_csv(path)
+    ratings = df['rating'].values
+except Exception:
+    ratings = []
+    with open(path, 'r', encoding='utf-8') as f:
+        next(f)
+        for line in f:
+            parts = line.strip().split(',')
+            if len(parts) >= 3:
+                try:
+                    ratings.append(float(parts[2]))
+                except:
+                    pass
+    ratings = np.array(ratings)
+
+if ratings.size == 0:
+    raise RuntimeError('Aucune note trouvée dans ' + path)
+
+minr, maxr = float(ratings.min()), float(ratings.max())
+q5, q10, q25, q30, q50, q70, q75, q90 = np.percentile(ratings, [5,10,25,30,50,70,75,90])
+
+# membership functions
+def tri(x,a,b,c):
+    x = np.array(x, dtype=float)
+    y = np.zeros_like(x, dtype=float)
+    y[x <= a] = 0.0
+    left = (x > a) & (x <= b)
+    if b != a:
+        y[left] = (x[left] - a) / (b - a)
+    y[np.isclose(x, b)] = 1.0
+    right = (x > b) & (x < c)
+    if c != b:
+        y[right] = (c - x[right]) / (c - b)
+    y[x >= c] = 0.0
+    return y
+
+def trap(x,a,b,c,d):
+    x = np.array(x, dtype=float)
+    y = np.zeros_like(x, dtype=float)
+    left = (x > a) & (x <= b)
+    if b != a:
+        y[left] = (x[left] - a) / (b - a)
+    mid = (x > b) & (x <= c)
+    y[mid] = 1.0
+    right = (x > c) & (x < d)
+    if d != c:
+        y[right] = (d - x[right]) / (d - c)
+    return y
+
+# define x axis
+x = np.linspace(minr, maxr, 501)
+
+# Triangles based on quartiles
+tri_low = tri(x, minr, q25, q50)
+tri_mid = tri(x, q25, q50, q75)
+tri_high = tri(x, q50, q75, maxr)
+
+# Trapezoids based on chosen percentiles
+trap_low = trap(x, minr, minr, q10, q30)
+trap_mid = trap(x, q10, q30, q70, q90)
+trap_high = trap(x, q70, q90, maxr, maxr)
+
+# Plot
+img_dir = os.path.join('Rapport_FuzzyRec','figures')
+os.makedirs(img_dir, exist_ok=True)
+img_path = os.path.join(img_dir,'membership_moviLens_quantiles.png')
+
+plt.figure(figsize=(9,4))
+# histogram of ratings
+bins = np.arange(minr - 0.25, maxr + 0.5, 0.5)
+plt.hist(ratings, bins=bins, density=True, alpha=0.25, color='gray', label='Histogramme (densité)')
+
+# plot triangles
+plt.plot(x, tri_low, label=f'Triangle low (a={minr:.2f}, b={q25:.2f}, c={q50:.2f})', color='C0')
+plt.plot(x, tri_mid, label=f'Triangle mid (a={q25:.2f}, b={q50:.2f}, c={q75:.2f})', color='C1')
+plt.plot(x, tri_high, label=f'Triangle high (a={q50:.2f}, b={q75:.2f}, c={maxr:.2f})', color='C2')
+
+# plot trapezoids (dashed)
+plt.plot(x, trap_low, '--', label=f'Trapezoide low (..{q10:.2f},{q30:.2f})', color='C0')
+plt.plot(x, trap_mid, '--', label=f'Trapezoide mid ({q10:.2f},{q30:.2f},{q70:.2f},{q90:.2f})', color='C1')
+plt.plot(x, trap_high, '--', label=f'Trapezoide high ({q70:.2f},{q90:.2f}..)', color='C2')
+
+plt.xlabel('Note')
+plt.ylabel('Degre d appartenance mu / densite')
+plt.title('Membership: triangles vs trapezoides (parametres tires des quantiles)')
+plt.legend(fontsize=8)
+plt.tight_layout()
+plt.savefig(img_path, dpi=150)
+
+# sample memberships
+samples = [2.0, 3.0, 4.0]
+print('min,max, q10,q25, q50, q75, q90 =', f'{minr:.2f}', f'{maxr:.2f}', f'{q10:.2f}', f'{q25:.2f}', f'{q50:.2f}', f'{q75:.2f}', f'{q90:.2f}')
+for s in samples:
+    m_tri = (tri([s], minr, q25, q50)[0], tri([s], q25, q50, q75)[0], tri([s], q50, q75, maxr)[0])
+    m_trap = (trap([s], minr, minr, q10, q30)[0], trap([s], q10, q30, q70, q90)[0], trap([s], q70, q90, maxr, maxr)[0])
+    print(f'sample {s}: triangles low/mid/high = {m_tri[0]:.2f}/{m_tri[1]:.2f}/{m_tri[2]:.2f}; traps low/mid/high = {m_trap[0]:.2f}/{m_trap[1]:.2f}/{m_trap[2]:.2f}')
+
+print('Saved', img_path)
+\end{lstlisting}
+
+\section{Questions fréquentes et réponses}
+\begin{itemize}
+    \item "Est-ce que la somme des $\mu$ vaut 1 ?" — Non. Les degrés d'appartenance ne doivent pas forcément sommer à 1 ; ils mesurent indépendamment l'appartenance à chaque terme.
+  \item "Pourquoi choisir plateau ou pic ?" — Plateau = robustesse / tolérance ; pic = précision / sensibilité.
+  \item "Comment calibrer automatiquement ?" — Méthodes : placer paramètres aux percentiles (comme fait ici), optimiser par apprentissage (ajuster pour améliorer métriques de recommandation), ou par analyse de clusters.
+\end{itemize}
+
+\section*{Conclusion}
+Ce document rassemble l'intégralité des explications demandées : définitions, exemples numériques, visualisations et code. Si tu veux que je compile ce fichier en PDF maintenant, ou que j'ajoute d'autres sections (ex. défuzzification détaillée, règles Mamdani, calcul du centroïde), dis-le moi.
+
+\end{document}
