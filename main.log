@@ -2,8 +2,8 @@ This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloade
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**main.tex
-(./main.tex
+**Rapport_FuzzyRec/main.tex
+(./Rapport_FuzzyRec/main.tex
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-22>
 (/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
@@ -825,7 +825,7 @@ File: l3backend-pdftex.def 2024-01-04 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count338
 \l__pdf_internal_box=\box75
 )
-(./main.aux)
+No file main.aux.
 \openout1 = `main.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 43.
@@ -848,7 +848,7 @@ LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 43.
 LaTeX Font Info:    ... okay on input line 43.
 LaTeX Info: Redefining \degres on input line 43.
 LaTeX Info: Redefining \up on input line 43.
- (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+(/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count339
 \scratchdimen=\dimen312
@@ -905,257 +905,67 @@ e
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
 Package hyperref Info: Link coloring ON on input line 43.
-(./main.out) (./main.out)
 \@outlinefile=\write4
 \openout4 = `main.out'.
 
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: listings package is loaded.
 Package caption Info: longtable package is loaded.
-
 (/usr/share/texlive/texmf-dist/tex/latex/caption/ltcaption.sty
 Package: ltcaption 2021/01/08 v1.4c longtable captions (AR)
 )
 Package caption Info: End \AtBeginDocument code.
 \c@lstlisting=\count345
-<images.png, id=183, 221.82875pt x 228.855pt>
-File: images.png Graphic file (type png)
-<use images.png>
-Package pdftex.def Info: images.png  used on input line 49.
-(pdftex.def)             Requested size: 66.08408pt x 68.17513pt.
- [1
+
+
+LaTeX Warning: File `images.png' not found on input line 49.
+
+
+! Package pdftex.def Error: File `images.png' not found: using draft setting.
+
+See the pdftex.def package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.49 ...graphics[width=0.14\textwidth]{images.png}
+                                                   \\[6pt]
+Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 4
+9.
+(/usr/share/texmf/tex/latex/lm/t1lmtt.fd
+File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+) [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}{/usr/share/texmf/fonts/enc/
-dvips/lm/lm-ec.enc} <./images.png>] (./main.toc
-LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 4
-.
- (/usr/share/texmf/tex/latex/lm/ot1lmr.fd
-File: ot1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-LaTeX Font Info:    Trying to load font information for OML+lmm on input line 4
-.
-
-(/usr/share/texmf/tex/latex/lm/omllmm.fd
-File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 
-4.
-
-(/usr/share/texmf/tex/latex/lm/omslmsy.fd
-File: omslmsy.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 
-4.
-
-(/usr/share/texmf/tex/latex/lm/omxlmex.fd
-File: omxlmex.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10.95> on input line 4.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <8> on input line 4.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <6> on input line 4.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 4.
-
-(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
-File: umsa.fd 2013/01/14 v3.01 AMS symbols A
-)
-LaTeX Font Info:    Trying to load font information for U+msb on input line 4.
-
-(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
-File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-) [2])
+dvips/lm/lm-ec.enc}]
+No file main.toc.
 \tf@toc=\write5
 \openout5 = `main.toc'.
 
- [3]
-(./sections/01_introduction.tex
-Underfull \hbox (badness 1112) in paragraph at lines 14--15
-[]\T1/lmr/m/n/10.95 fournir une interface en ligne de commande et une interface
- graphique permettant
- []
+[2]
 
-) (./sections/02_cadre_theorique.tex [4]
-LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 3
-8.
+! LaTeX Error: File `sections/01_introduction.tex' not found.
 
-(/usr/share/texmf/tex/latex/lm/t1lmtt.fd
-File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-) [5{/usr/share/texmf/fonts/enc/dvips/lm/lm-rm.enc}{/usr/share/texmf/fonts/enc/
-dvips/lm/lm-mathit.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm-mathsy.enc}{/usr
-/share/texmf/fonts/enc/dvips/lm/lm-mathex.enc}]
-Underfull \hbox (badness 2865) in paragraph at lines 60--61
-[]\T1/lmr/m/n/10.95 MovieLens est un ensemble de donnees de reference pour l'et
-ude des systemes de
- []
+Type X to quit or <RETURN> to proceed,
+or enter new name. (Default extension: tex)
 
-) (./sections/03_architecture.tex
-Underfull \hbox (badness 1472) in paragraph at lines 32--33
-[]\T1/lmr/m/n/10.95 Le module \T1/lmtt/m/n/10.95 data_manager \T1/lmr/m/n/10.95
- lit les fichiers MovieLens, valide les tables et construit les
- []
+Enter file name: 
+! Emergency stop.
+<read *> 
+         
+l.70 \input{sections/01_introduction}
+                                     ^^M
+*** (cannot \read from terminal in nonstop modes)
 
-[6]
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 39.
-) (./sections/04_modelisation_floue.tex
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 12.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 12.
-<figures/membership_genre_preference.png, id=280, 454.8995pt x 337.6615pt>
-File: figures/membership_genre_preference.png Graphic file (type png)
-<use figures/membership_genre_preference.png>
-Package pdftex.def Info: figures/membership_genre_preference.png  used on input
- line 30.
-(pdftex.def)             Requested size: 387.06906pt x 287.32275pt.
- [7]
-<figures/membership_average_rating.png, id=291, 454.8995pt x 337.6615pt>
-File: figures/membership_average_rating.png Graphic file (type png)
-<use figures/membership_average_rating.png>
-Package pdftex.def Info: figures/membership_average_rating.png  used on input l
-ine 37.
-(pdftex.def)             Requested size: 387.06906pt x 287.32275pt.
- [8 <./figures/membership_genre_preference.png>]
-<figures/membership_popularity.png, id=298, 454.8995pt x 337.6615pt>
-File: figures/membership_popularity.png Graphic file (type png)
-<use figures/membership_popularity.png>
-Package pdftex.def Info: figures/membership_popularity.png  used on input line 
-44.
-(pdftex.def)             Requested size: 387.06906pt x 287.32275pt.
-<figures/membership_recommendation_score.png, id=299, 454.8995pt x 337.6615pt>
-File: figures/membership_recommendation_score.png Graphic file (type png)
-<use figures/membership_recommendation_score.png>
-Package pdftex.def Info: figures/membership_recommendation_score.png  used on i
-nput line 51.
-(pdftex.def)             Requested size: 387.06906pt x 287.32275pt.
- [9 <./figures/membership_average_rating.png> <./figures/membership_popularity.
-png>]) (./sections/05_preferences_imprecises.tex [10 <./figures/membership_reco
-mmendation_score.png>]
-Underfull \hbox (badness 2460) in paragraph at lines 7--8
-[]\T1/lmr/m/n/10.95 Le profil utilisateur accepte trois formes. La premiere est
- linguistique, par exemple
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 19--20
-[]\T1/lmr/m/n/10.95 Un film MovieLens peut appartenir a plusieurs genres. La me
-thode
- []
-
-
-Underfull \hbox (badness 1635) in paragraph at lines 19--20
-\T1/lmtt/m/n/10.95 genre_preference_for_movie \T1/lmr/m/n/10.95 compare donc le
-s genres du film aux preferences declarees
- []
-
-) (./sections/06_pipeline.tex
-Underfull \hbox (badness 1642) in paragraph at lines 3--4
-[]\T1/lmr/m/n/10.95 Le pipeline transforme un profil utilisateur et un catalogu
-e de films en liste Top-N
- []
-
-[11] [12]) (./sections/07_implementation.tex
-Underfull \hbox (badness 1655) in paragraph at lines 26--27
-[]\T1/lmr/m/n/10.95 Le fichier \T1/lmtt/m/n/10.95 config/fuzzy_config.yaml \T1/
-lmr/m/n/10.95 contient les variables linguistiques, les fonctions
- []
-
-[13]) (./sections/08_interfaces.tex
-<figures/cli_recommend.png, id=332, 821.8705pt x 376.2055pt>
-File: figures/cli_recommend.png Graphic file (type png)
-<use figures/cli_recommend.png>
-Package pdftex.def Info: figures/cli_recommend.png  used on input line 11.
-(pdftex.def)             Requested size: 401.22942pt x 183.66493pt.
- [14]
-<figures/gui_preferences.png, id=337, 1072.005pt x 829.0975pt>
-File: figures/gui_preferences.png Graphic file (type png)
-<use figures/gui_preferences.png>
-Package pdftex.def Info: figures/gui_preferences.png  used on input line 24.
-(pdftex.def)             Requested size: 401.22942pt x 310.30356pt.
- [15 <./figures/cli_recommend.png>]
-<figures/gui_courbes.png, id=344, 1072.005pt x 829.0975pt>
-File: figures/gui_courbes.png Graphic file (type png)
-<use figures/gui_courbes.png>
-Package pdftex.def Info: figures/gui_courbes.png  used on input line 31.
-(pdftex.def)             Requested size: 401.22942pt x 310.30356pt.
-
-[16 <./figures/gui_preferences.png>]
-<figures/gui_resultats.png, id=351, 1043.9pt x 762.85pt>
-File: figures/gui_resultats.png Graphic file (type png)
-<use figures/gui_resultats.png>
-Package pdftex.def Info: figures/gui_resultats.png  used on input line 38.
-(pdftex.def)             Requested size: 401.22942pt x 293.20345pt.
- [17 <./figures/gui_courbes.png>])
-(./sections/09_resultats.tex
-Underfull \hbox (badness 2368) in paragraph at lines 7--8
-\T1/lmtt/m/n/10.95 user_id=1\T1/lmr/m/n/10.95 , avec les preferences explicites
- \T1/lmtt/m/n/10.95 Sci-Fi=forte,Action=moyenne\T1/lmr/m/n/10.95 . Le nombre de
-
- []
-
-[18 <./figures/gui_resultats.png>]
-<figures/exemple_inference_mamdani.png, id=364, 606.6665pt x 323.2075pt>
-File: figures/exemple_inference_mamdani.png Graphic file (type png)
-<use figures/exemple_inference_mamdani.png>
-Package pdftex.def Info: figures/exemple_inference_mamdani.png  used on input l
-ine 43.
-(pdftex.def)             Requested size: 401.22942pt x 213.76146pt.
- [19 <./figures/exemple_inference_mamdani.png>]) (./sections/10_discussion_conc
-lusion.tex [20]) [21] (./main.bbl
-Underfull \hbox (badness 1286) in paragraph at lines 4--8
-[]\T1/lmr/m/n/10.95 Fernando Bobillo and Umberto Straccia.  Fuzzy ontology repr
-esentation using owl 2.
- []
-
-) [22]
-Underfull \hbox (badness 6927) in paragraph at lines 88--89
-[]\T1/lmr/m/n/10.95 L'integralite du code source, des tests et de la configurat
-ion est publiee sous
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 88--89
-\T1/lmr/m/n/10.95 licence libre dans le depot public suivant : [][]$\T1/lmtt/m/
-n/10.95 https : / / github . com / JudicaelMAKWIZA /
- []
-
-
-Underfull \hbox (badness 1062) in paragraph at lines 88--89
-\T1/lmtt/m/n/10.95 imprecise-[]movie-[]fuzzy-[]recommender$[][]\T1/lmr/m/n/10.9
-5 . Le lecteur y trouvera les instructions d'installation,
- []
-
-[23] (./main.aux)
- ***********
-LaTeX2e <2023-11-01> patch level 1
-L3 programming layer <2024-01-22>
- ***********
-Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 8CF64A8AF765C4FAA01246433FECFE9F;6464.
- ) 
+ 
 Here is how much of TeX's memory you used:
- 27378 strings out of 476139
- 505258 string characters out of 5794453
- 1937975 words of memory out of 5000000
- 48801 multiletter control sequences out of 15000+600000
- 621386 words of font info for 84 fonts, out of 8000000 for 9000
+ 26683 strings out of 476139
+ 490748 string characters out of 5794453
+ 1930975 words of memory out of 5000000
+ 48286 multiletter control sequences out of 15000+600000
+ 584685 words of font info for 47 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 84i,10n,93p,823b,1005s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</usr/share/texmf/fonts/type1/public/lm/lmbx10.pfb></usr/share/texmf/fonts/ty
-pe1/public/lm/lmbx12.pfb></usr/share/texmf/fonts/type1/public/lm/lmcsc10.pfb></
-usr/share/texmf/fonts/type1/public/lm/lmex10.pfb></usr/share/texmf/fonts/type1/
-public/lm/lmmi10.pfb></usr/share/texmf/fonts/type1/public/lm/lmmi8.pfb></usr/sh
-are/texmf/fonts/type1/public/lm/lmr10.pfb></usr/share/texmf/fonts/type1/public/
-lm/lmr8.pfb></usr/share/texmf/fonts/type1/public/lm/lmri10.pfb></usr/share/texm
-f/fonts/type1/public/lm/lmsy10.pfb></usr/share/texmf/fonts/type1/public/lm/lmsy
-8.pfb></usr/share/texmf/fonts/type1/public/lm/lmtt10.pfb></usr/share/texmf/font
-s/type1/public/lm/lmtt8.pfb>
-Output written on main.pdf (23 pages, 1108986 bytes).
-PDF statistics:
- 482 PDF objects out of 1000 (max. 8388607)
- 391 compressed objects within 4 object streams
- 93 named destinations out of 1000 (max. 500000)
- 463 words of extra memory for PDF output out of 10000 (max. 10000000)
-
+ 84i,5n,93p,683b,457s stack positions out of 10000i,1000n,20000p,200000b,200000s
+!  ==> Fatal error occurred, no output PDF file produced!
